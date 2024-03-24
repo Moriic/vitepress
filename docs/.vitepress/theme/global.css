@@ -1,0 +1,11 @@
+/* docs/.vitepress/theme/global.css */
+/* 图片点击放大优先级调整 */
+.medium-zoom-image {
+  z-index: 9999 !important;
+  margin: 20px auto !important;
+  border-radius: 8px;
+}
+
+h4{
+  font-size: 18px !important;
+}
