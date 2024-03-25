@@ -5,8 +5,6 @@ import AutoSidebar from 'vite-plugin-vitepress-auto-sidebar';
 export default defineConfig({
   vite: {
     plugins: [AutoSidebar({
-      deletePrefix: '.',
-      collapsed: false,
       ignoreList: ["assets"]
     })],
   },
@@ -16,7 +14,8 @@ export default defineConfig({
     // https://vitepress.dev/reference/default-theme-config
     nav: [
       { text: 'Home', link: '/' },
-      { text: 'Interview', link: '/Interview/ComputerBasics/Network' }
+      { text: 'Interview', link: '/Interview/ComputerBasics/Network' },
+      { text: 'Backend', link: '/Backend/index' }
     ],
     sidebar: [
       {
