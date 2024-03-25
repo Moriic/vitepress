@@ -9,3 +9,15 @@
 h4{
   font-size: 18px !important;
 }
+
+h2{
+  border-top: 2px solid #8484fe !important;
+}
+
+h2, h3, h4{
+  color: rgb(74, 156, 240);
+}
+
+strong{
+  color: var(--vp-code-color);
+}
