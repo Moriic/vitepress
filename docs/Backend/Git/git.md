@@ -26,6 +26,7 @@ git config --global color.diff auto
 git config --global color.branch auto
 git config --global color.interactive auto
 git config --global --unset http.proxy                    # remove  proxy configuration on git
+git config --global core.ignorecase false				  # 对大小写敏感
 ```
 
 ## 增加/删除文件
