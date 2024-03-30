@@ -681,8 +681,6 @@ drop trigger tb_user_insert_trigger;
 
 ### 表级锁
 
-#### 表锁
-
 - 表共享读锁(read lock)：当前客户端 **只读不写**，其他客户端 **可读**，**写** 操作会 **阻塞** 到 unlock
 - 表独占写锁(write lock)：当前客户端 **可写可读**，其他客户端 **读写** 操作都会 **阻塞** 到 unlock
 
@@ -691,9 +689,38 @@ drop trigger tb_user_insert_trigger;
 - 加锁：`lock tables 表名... read/write;`
 - 解锁：`unlock tables; / 客户端断开连接`
 
-#### 元数据锁
+### 元数据锁
 
 元数据锁((meta data lock/MDL)加锁是系统自动控制，在访问表时自动加上，保证表有事务时不能改变表的结构，即 **避免 DML 和 DDL 的冲突**。
 
-#### 意向锁
+当进行增删改查时，加MDL读锁(共享)，当进行表结构变更时，加MDL写锁(排他)
 
+### 意向锁
+
+**解决行锁和表锁冲突问题**。
+
+- 意向共享锁(IS)：select … lock in share mode 添加，与表锁共享锁兼容，与表锁排他锁互斥
+- 意向排他锁(IX)：由select、update、delete、select … for update 添加，与表锁共享锁和排他锁都互斥，意向锁不互斥
+
+**解决行锁和表锁冲突问题**。
+
+- 意向共享锁(IS)：select … lock in share mode 添加，与表锁共享锁兼容，与表锁排他锁互斥
+- 意向排他锁(IX)：由select、update、delete、select … for update 添加，与表锁共享锁和排他锁都互斥，意向锁不互斥
+
+### 行级锁
+
+InnoDB的数据是基于索引组织的，行锁是通过对索引上的索引项加锁来实现的，而不是对记录加的锁
+
+- 行锁：锁定单个行记录的锁，防止其他事务对此行进行update，delete，在RC、RR隔离级别下支持
+- 间隙锁：锁定索引记录间隙，确保索引间隙不变，防止其他事务insert，产生幻读
+- 临键锁：行锁和间隙锁结合，同时锁住，在RR下支持
+
+如果条件没有索引，则会升级为表锁
+
+### 小结
+
+- insert,update,delete 自动加排他锁
+- select不加锁
+- select … lock in share mode 加共享锁(意向共享锁IS，行锁)
+- select … for update 加排它锁
+- 查询不存在的索引添加间隙锁
