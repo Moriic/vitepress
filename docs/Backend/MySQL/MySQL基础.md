@@ -1,10 +1,10 @@
 ## 常用命令
 
-启动：net start [mysql名字]
+启动：net start [mysql 名字]
 
-停止：net stop [mysql名字]
+停止：net stop [mysql 名字]
 
-客户端连接：mysql [-h 127.0.0.1] [-P 3306] -uroot -p[密码]
+客户端连接：mysql [-h 127.0.0.1] [-P 3306] -uroot -p [密码]
 
 退出：exit
 
@@ -31,8 +31,8 @@
 | ------------- | ----------- | ------------------ |
 | char(size)    | 255         | 定长字符串，性能好 |
 | varchar(size) | 65535       | 变长字符串，内存少 |
-| tinyblob      | 255         | blob存放二进制数据 |
-| tinytext      | 255         | text存放文本数据   |
+| tinyblob      | 255         | blob 存放二进制数据 |
+| tinytext      | 255         | text 存放文本数据   |
 | blob          | 65535       |                    |
 | text          | 65535       |                    |
 | mediumblob    | 16777215    |                    |
@@ -45,14 +45,14 @@
 | 类型      | 大小 | 格式                |
 | --------- | ---- | ------------------- |
 | date      | 3    | YYYY-MM-DD          |
-| time      | 3    | HH:MM:SS            |
+| time      | 3    | HH: MM: SS            |
 | year      | 1    | YYYY                |
-| datetime  | 8    | YYYY-MM-DD HH:MM:SS |
-| timestamp | 4    | YYYY-MM-DD HH:MM:SS |
+| datetime  | 8    | YYYY-MM-DD HH: MM: SS |
+| timestamp | 4    | YYYY-MM-DD HH: MM: SS |
 
 
 
-## SQL分类
+## SQL 分类
 
 | 分类 | 全称                       | 说明                                                   |
 | ---- | -------------------------- | ------------------------------------------------------ |
@@ -171,24 +171,24 @@ create table emp(
 | 条件            | 说明                                  |
 | --------------- | ------------------------------------- |
 | >,>=,<,<=,=,!=  |                                       |
-| between A and B | [A,B]                                 |
+| between A and B | [A, B]                                 |
 | in(值列表)      | 在列表值中                            |
-| like '参数'     | 参数_代表单个字符,参数%代表任意个字符 |
-| is null         | 为null                                |
+| like '参数'     | 参数_代表单个字符, 参数%代表任意个字符 |
+| is null         | 为 null                                |
 | &&,\|\|,!       |                                       |
 
 `select * from employee where idcard like '%X';`
 
 #### 聚合函数
 
-统计一列的函数值(不包括null)：`select 聚合函数(参数列表) from 表名 [where 条件]`
+统计一列的函数值(不包括 null)：`select 聚合函数(参数列表) from 表名 [where 条件]`
 
 `select avg(age) from employee;`
 
 | 函数    | 说明       |
 | ------- | ---------- |
 | count   | 统计数量   |
-| max,min | 最大最小值 |
+| max, min | 最大最小值 |
 | avg     | 平均值     |
 | sum     | 求和       |
 
@@ -196,12 +196,12 @@ create table emp(
 
 `select 字段列表 from 表名列表 [where 条件列表] group by 分组字段列表 having [分组后的过滤条件]`
 
-where和having区别
+where 和 having 区别
 
-1. where在分组前过滤，having在分组后过滤
-2. where不能使用聚合函数，having可用
+1. where 在分组前过滤，having 在分组后过滤
+2. where 不能使用聚合函数，having 可用
 
-例子：分组前选择age>=18进行过滤,以性别进行分组,并选择性别数量大于2的进行查询。
+例子：分组前选择 age >= 18 进行过滤, 以性别进行分组, 并选择性别数量大于 2 的进行查询。
 
 `select gender,count(*) gender_num from employee where age >= 18 group by gender having gender_num >= 2;`
 
@@ -209,7 +209,7 @@ where和having区别
 
 `select 字段列表 from 表名 order by 字段1 排序方式1,字段2 排序方式2;`
 
-排序方式：asc:升序(默认),desc(降序)
+排序方式：asc: 升序(默认), desc(降序)
 
 `select * from employee order by age,entrydate desc;`
 
@@ -217,10 +217,10 @@ where和having区别
 
 `selece 字段列表 from 表名 limit 起始索引,查询记录数;`
 
-1. 起始索引从0开始，起始索引 = (查询页码 - 1) \* 每页显示记录数
+1. 起始索引从 0 开始，起始索引 = (查询页码 - 1) \* 每页显示记录数
 2. 第一页起始索引可省略，即 limit 10;
 
-查询5条记录，去掉前3条，显示2条，即每页两条记录，显示第
+查询 5 条记录，去掉前 3 条，显示 2 条，即每页两条记录，显示第
 
 `select * from employee limit 3,2;`
 
@@ -268,13 +268,13 @@ where和having区别
 
 | 函数                     | 说明                                    |
 | ------------------------ | --------------------------------------- |
-| concat(s1,s1,…,sn)       | 拼接字符串                              |
+| concat(s1, s1,…, sn)       | 拼接字符串                              |
 | lower(str)               | 将字符串转换为小写                      |
 | upper(str)               | 将字符串转换为大写                      |
-| lpad(str,n,pad)          | 用字符串pad对str进行左填充，直到长度为n |
-| rpad(str,n,pad)          | 用字符串pad对str进行右填充，直到长度为n |
+| lpad(str, n, pad)          | 用字符串 pad 对 str 进行左填充，直到长度为 n |
+| rpad(str, n, pad)          | 用字符串 pad 对 str 进行右填充，直到长度为 n |
 | trim(str)                | 去掉字符串头部和尾部的空格              |
-| substring(str,start,len) | 截取str从start开始的len个长度的字符串   |
+| substring(str, start, len) | 截取 str 从 start 开始的 len 个长度的字符串   |
 
 ### 数值函数
 
@@ -282,11 +282,11 @@ where和having区别
 | ---------- | -------------------------------- |
 | ceil(x)    | 向上取整                         |
 | floor(x)   | 向下取整                         |
-| mod(x,y)   | 返回x/y的模                      |
-| rand()     | 返回0~1的随机数，double          |
-| round(x,y) | 求参数x的四舍五入值，保留y位小数 |
+| mod(x, y)   | 返回 x/y 的模                      |
+| rand()     | 返回 0~1 的随机数，double          |
+| round(x, y) | 求参数 x 的四舍五入值，保留 y 位小数 |
 
-生成6位随机验证码：`select rpad(round(rand()*1000000,0),6,'0');`
+生成 6 位随机验证码：`select rpad(round(rand()*1000000,0),6,'0');`
 
 ### 日期函数
 
@@ -295,18 +295,18 @@ where和having区别
 | curdate()                         | 获取当前日期                 |
 | curtime()                         | 获取当前时间                 |
 | now()                             | 获取当前日期和时间           |
-| year/month/day(date)              | 获取date的年/月/日           |
-| date_add(date,INTERVAL expr type) | 返回date加上间隔expr后的时间 |
-| datediff(date1,date2)             | 返回时间间隔天数             |
+| year/month/day(date)              | 获取 date 的年/月/日           |
+| date_add(date, INTERVAL expr type) | 返回 date 加上间隔 expr 后的时间 |
+| datediff(date1, date2)             | 返回时间间隔天数             |
 
 ### 流程函数
 
 | 函数                                                     | 说明                                              |
 | -------------------------------------------------------- | ------------------------------------------------- |
-| if(value,t,f)                                            | 如果value为true，返回t，否则返回f                 |
-| ifnull(value1,value2)                                    | 如果value1不为空，返回value1，否则返回value2      |
-| case when [val1] then [res1] … else [default] end        | 如果val1为true返回res1，否则返回default默认值     |
-| case [expr] when [val1] then [res1] … else [default] end | 如果expr值为val1，返回res1，否则返回default默认值 |
+| if(value, t, f)                                            | 如果 value 为 true，返回 t，否则返回 f                 |
+| ifnull(value1, value2)                                    | 如果 value1 不为空，返回 value1，否则返回 value2      |
+| case when [val1] then [res1] … else [default] end        | 如果 val1 为 true 返回 res1，否则返回 default 默认值     |
+| case [expr] when [val1] then [res1] … else [default] end | 如果 expr 值为 val1，返回 res1，否则返回 default 默认值 |
 
 `select (case workaddress when '北京' then '一线城市' when '上海' then '一线城市' else '二线城市' end) from emp;`
 
@@ -326,7 +326,7 @@ where和having区别
 | 默认约束 | default        | 指定默认值               |
 | 检查约束 | check          | 保证字段满足一个条件     |
 | 外键约束 | foreign key    | 两张表建立连接           |
-| 自动增长 | auto_increment | 自动增长1                |
+| 自动增长 | auto_increment | 自动增长 1                |
 
 ```sql
 create table user
@@ -343,9 +343,9 @@ create table user
 
 #### 主键约束
 
-主键只能由一个,主键建议使用int,bigint,char等定长类型。
+主键只能由一个, 主键建议使用 int, bigint, char 等定长类型。
 
-- 单一主键：`idcard int primary key;`(列级方式),`primary key(idcard);`(表级方式)
+- 单一主键：`idcard int primary key;`(列级方式), `primary key(idcard);`(表级方式)
 - 复合主键：`primary key(id,name;)`
 - 自然主键：`id int primary key auto_increment;`
 
@@ -379,7 +379,7 @@ alter table emp add constraint fk_emp_dept_id foreign key(dept_id) references de
 
 - `no action/restrict(默认)`：当在父表中删除/更新记录时，首先检查该记录是否有对应外键，如果有则不允许删除/更新。
 - `cascade`：当在父表中删除/更新记录时，首先检查该记录是否有对应外键，如果有则删除/更新外键在子表中的记录
-- `set null`：当在父表中删除/更新记录时，首先检查该记录是否有对应外键，如果有则设置外键在子表的值为null
+- `set null`：当在父表中删除/更新记录时，首先检查该记录是否有对应外键，如果有则设置外键在子表的值为 null
 - `set default`：父表有变更时，子表将外键设置为一个默认的值
 
 ## 多表查询
@@ -391,7 +391,7 @@ alter table emp add constraint fk_emp_dept_id foreign key(dept_id) references de
 1. 隐式内连接：`select 字段列表 from 表1,表2 where条件;`
 2. 显式内连接：`select 字段列表 from 表1 [inner] join 表2 on 连接条件`
 
-例如：表emp表示员工对应的部门id，表dept表示部门id对应的名字，查询每个员工姓名对应的部门名字
+例如：表 emp 表示员工对应的部门 id，表 dept 表示部门 id 对应的名字，查询每个员工姓名对应的部门名字
 
 1. 隐式内连接：`select emp.name,dept.name from emp,dept where emp.dept_id = dept.id`
 2. 使用别名：`select e.name,d.name from emp e,dept d where e.dept_id = d.id`
@@ -409,11 +409,11 @@ alter table emp add constraint fk_emp_dept_id foreign key(dept_id) references de
 
 例如：
 
-- 查询emp表的所有数据和对应的部门名字
+- 查询 emp 表的所有数据和对应的部门名字
 
   `select e.*,d.name from emp e left outer join dept d e.dept_id = d.id`
 
-- 查询dept表的所有数据和对应的员工信息
+- 查询 dept 表的所有数据和对应的员工信息
 
   `select d.*,e.* from emp e right outer join dept d e.dept_id = d.id`
 
@@ -423,7 +423,7 @@ alter table emp add constraint fk_emp_dept_id foreign key(dept_id) references de
 
 `select 字段列表 from 表1 别名1 join 表1 别名2 on 条件`
 
-例如：表emp中包含自身id和所属领导id
+例如：表 emp 中包含自身 id 和所属领导 id
 
 查询员工及其所属领导信息:
 
@@ -437,19 +437,19 @@ alter table emp add constraint fk_emp_dept_id foreign key(dept_id) references de
 
 ### 联合查询
 
-将多次查询的结果合并起来,union会去重,字段列表需要一致
+将多次查询的结果合并起来, union 会去重, 字段列表需要一致
 
 `select 字段列表 from 表1 union[all] select 字段列表 from 表2; `
 
 ### 子查询
 
-SQL语句中嵌套select语句
+SQL 语句中嵌套 select 语句
 
 `select * from t1 where column1 = (select column1 from t2)`
 
 #### 标量子查询
 
-子查询返回单个值,操作符一般为 = > < >= <=
+子查询返回单个值, 操作符一般为 = > < > = <=
 
 `select * from emp where dept_id = (select id from dept where name = "销售部")`
 
@@ -486,18 +486,18 @@ SQL语句中嵌套select语句
 
 ### 事务操作
 
-1. 查看事务提交方式：`select @@autocommit;`,为1是自动提交
-2. 设置事务提交方式：`set @@autocommit = 0; `,设为手动提交
+1. 查看事务提交方式：`select @@autocommit;`, 为 1 是自动提交
+2. 设置事务提交方式：`set @@autocommit = 0; `, 设为手动提交
 3. 开启事务：`start transaction 或 begin`
 4. 提交事务：`commit;`
 5. 回滚事务：`rollback;`
 
 ### 事务四大特性(ACID)
 
-1. 原子性(Atomicity):事务是不可分割的最小操作单元，要么全部成功，要么全部失败
-2. 一致性(Consistency):事务完成时，必须使所有的数据保存一致状态
-3. 隔离性(Isolation):数据库系统提供的隔离机制，保证事务在不受外部并发操作影响的独立环境下运行
-4. 持久性(Durability):事务一旦提交后或回滚，它对数据库中的数据的改变就是永久的
+1. 原子性(Atomicity): 事务是不可分割的最小操作单元，要么全部成功，要么全部失败
+2. 一致性(Consistency): 事务完成时，必须使所有的数据保存一致状态
+3. 隔离性(Isolation): 数据库系统提供的隔离机制，保证事务在不受外部并发操作影响的独立环境下运行
+4. 持久性(Durability): 事务一旦提交后或回滚，它对数据库中的数据的改变就是永久的
 
 ### 并发事务问题
 
