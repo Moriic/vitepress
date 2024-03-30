@@ -33,3 +33,7 @@
 .vp-doc li::marker {
   color: var(--vp-code-color) !important;
 }
+
+.vp-doc h2 .header-anchor{
+  top: 0;
+}
