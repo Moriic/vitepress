@@ -4,7 +4,7 @@
 
 MySQL Server 架构自顶向下大致可以分网络连接层、服务层、存储引擎层和系统文件层(存储层)。
 
-<img src="./assets/20210712080321792.png" alt="20210712080321792" style="zoom:67%;" />
+<img src="https://raw.githubusercontent.com/Moriic/picture/main/image/1711786382_0.png" alt="20210712080321792" style="zoom:67%;" />
 
 ### 存储引擎操作
 
@@ -87,7 +87,7 @@ Memory
 - 如果不存在主键，将使用第一个唯一索引(unique)作为聚集索引
 - 如果表没有主键，或没有合适的唯一索引，则 InnoDB 会自动生成一个 rowid 作为隐藏的聚集索引
 
-<img src="./assets/image-20230812165905514.png" alt="image-20230812165905514" style="zoom: 50%;" />
+<img src="https://raw.githubusercontent.com/Moriic/picture/main/image/1711786383_1.png" alt="image-20230812165905514" style="zoom: 50%;" />
 
 ## 性能分析
 
@@ -249,15 +249,15 @@ load data local infile '/root/sql1.log' into table 'tb_user' fields terminated b
 
 1. 数据组织方式：在 InnoDB 存储引擎中，表数据都是根据主键顺序组织存放的，这种存储方式的表称为索引组织表（Index organized table, IOT）
 
-   <img src="./assets/image-20230820112934288.png" alt="image-20230820112934288" style="zoom:50%;" />
+   <img src="https://raw.githubusercontent.com/Moriic/picture/main/image/1711786384_2.png" alt="image-20230820112934288" style="zoom:50%;" />
 
 2. 页分裂：页可以为空，也可以填充一般，也可以填充 100%，每个页包含了 2-N 行数据（如果一行数据过大，会行溢出），根据主键排列。
 
-   <img src="./assets/image-20230820113015857.png" alt="image-20230820113015857" style="zoom:50%;" />
+   <img src="https://raw.githubusercontent.com/Moriic/picture/main/image/1711786385_3.png" alt="image-20230820113015857" style="zoom:50%;" />
 
 3. 页合并：当删除一行记录时，实际上记录并没有被物理删除，只是记录被标记（flaged）为删除并且它的空间变得允许被其他记录声明使用。当页中删除的记录到达 MERGE_THRESHOLD（默认为页的 50%），InnoDB 会开始寻找最靠近的页（前后）看看是否可以将这两个页合并以优化空间使用。
 
-<img src="./assets/image-20230820113041554.png" alt="image-20230820113041554" style="zoom:50%;" />
+<img src="https://raw.githubusercontent.com/Moriic/picture/main/image/1711786385_4.png" alt="image-20230820113041554" style="zoom:50%;" />
 
 MERGE_THRESHOLD：合并页的阈值，可以自己设置，在创建表或创建索引时指定
 
