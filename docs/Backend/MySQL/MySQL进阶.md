@@ -693,34 +693,117 @@ drop trigger tb_user_insert_trigger;
 
 元数据锁((meta data lock/MDL)加锁是系统自动控制，在访问表时自动加上，保证表有事务时不能改变表的结构，即 **避免 DML 和 DDL 的冲突**。
 
-当进行增删改查时，加MDL读锁(共享)，当进行表结构变更时，加MDL写锁(排他)
+当进行增删改查时，加 MDL 读锁(共享)，当进行表结构变更时，加 MDL 写锁(排他)
 
 ### 意向锁
 
 **解决行锁和表锁冲突问题**。
 
 - 意向共享锁(IS)：select … lock in share mode 添加，与表锁共享锁兼容，与表锁排他锁互斥
-- 意向排他锁(IX)：由select、update、delete、select … for update 添加，与表锁共享锁和排他锁都互斥，意向锁不互斥
+- 意向排他锁(IX)：由 select、update、delete、select … for update 添加，与表锁共享锁和排他锁都互斥，意向锁不互斥
 
 **解决行锁和表锁冲突问题**。
 
 - 意向共享锁(IS)：select … lock in share mode 添加，与表锁共享锁兼容，与表锁排他锁互斥
-- 意向排他锁(IX)：由select、update、delete、select … for update 添加，与表锁共享锁和排他锁都互斥，意向锁不互斥
+- 意向排他锁(IX)：由 select、update、delete、select … for update 添加，与表锁共享锁和排他锁都互斥，意向锁不互斥
 
 ### 行级锁
 
-InnoDB的数据是基于索引组织的，行锁是通过对索引上的索引项加锁来实现的，而不是对记录加的锁
+InnoDB 的数据是基于索引组织的，行锁是通过对索引上的索引项加锁来实现的，而不是对记录加的锁
 
-- 行锁：锁定单个行记录的锁，防止其他事务对此行进行update，delete，在RC、RR隔离级别下支持
-- 间隙锁：锁定索引记录间隙，确保索引间隙不变，防止其他事务insert，产生幻读
-- 临键锁：行锁和间隙锁结合，同时锁住，在RR下支持
+- 行锁：锁定单个行记录的锁，防止其他事务对此行进行 update，delete，在 RC、RR 隔离级别下支持
+- 间隙锁：锁定索引记录间隙，确保索引间隙不变，防止其他事务 insert，产生幻读
+- 临键锁：行锁和间隙锁结合，同时锁住，在 RR 下支持
 
 如果条件没有索引，则会升级为表锁
 
 ### 小结
 
-- insert,update,delete 自动加排他锁
-- select不加锁
-- select … lock in share mode 加共享锁(意向共享锁IS，行锁)
+- insert, update, delete 自动加排他锁
+- select 不加锁
+- select … lock in share mode 加共享锁(意向共享锁 IS，行锁)
 - select … for update 加排它锁
 - 查询不存在的索引添加间隙锁
+
+## InnoDB 引擎
+
+### 逻辑存储结构
+
+- 表空间(idb 文件)：一个 mysql 实例可以对应多个表空间，用于存储记录、索引等数据
+
+- 段：分为数据段、索引段、回滚段，InnoDB 是索引组织表，数据段就是 B+树的叶子节点，索引段即为 B+树的非叶子节点，段用来管理多个区
+- 区：表空间的单元结构，每个区大小为 1M，默认情况下，InnoDB 存储引擎页大小为 16K，即一个区一共有 64 个连续的页
+- 页：InnoDB 引擎管理的最小单元，每个页大小为 16KB，为了保证页的连续性，每次从磁盘申请 4-5 个区
+- 行：数据按行存储
+
+<img src="https://raw.githubusercontent.com/Moriic/picture/main/image/1711809446_0.png" alt="image-20240330210256492" style="zoom: 50%;" />
+
+![image-20240330214945628](https://raw.githubusercontent.com/Moriic/picture/main/image/1711806586_0.png)
+
+### 事务原理
+
+- **原子性(Atomicity)**：事务是不可分割的最小操作单元，要么全部成功，要么全部失败。
+- **一致性(Consistency)**：事务完成时，必须使所有的数据都保持一致状态。
+- **隔离性(Isolation)**：数据库系统提供的隔离机制，保证事务在不受外部并发操作影响的独立环境下运行。
+- **持久性(Durablity)**：事务一旦提交或回滚，它对数据库中的数据的改变就是永久的。
+
+**redo log 和 undo log 保证 原子型，一致性，持久性**
+
+**锁 和 MVCC 保证 隔离性**
+
+### redo log
+
+重做日志，记录事务提交时物理页的物理修改，用来实现事务的持久性，防止脏页到磁盘出错
+
+由重做日志缓冲(redo log buffer)以及重做日志文件(redo log file)，前者在内存，后者在磁盘，当事务提交之后会把所有修改信息都存到该日志文件中，用于在刷新脏页到磁盘中，进行数据恢复使用。
+
+<img src="https://raw.githubusercontent.com/Moriic/picture/main/image/1711815034_0.png" alt="image-20240331001034004" style="zoom:50%;" />
+
+### undo log
+
+回滚日志，记录数据被修改前的信息，作用：提供回滚 和 MVCC(多版本并发控制)
+
+- undo log 记录 **逻辑日志**，redo log 记录 **物理日志**
+
+- 当 delete 一条日志，undo log 会记录一条 insert 记录，当 update 一条记录，记录一条相反的 update
+
+- undo log 在事务执行时产生，事务提交时，并不会立即删除 undo log，可能用于 MVCC
+
+- undo log 采用段的方式进行管理和记录，存放在 rollback segment 回滚段中，包含 1024 个 undo log segment
+
+
+### MVCC
+
+- 当前读：读取的时最新版本，并保证其他并发事务不能修改当前记录，对记录进行加锁，如 select … lock in share mode(共享锁), select … for update, update, delete(排他锁)
+- 快照读：读取的可能是历史版本，不加锁，非阻塞读，简单的 select
+  - RC 级别：每次 select，都生成一个快照读
+  - RR 级别：开启事务后第一个 select 语句才是快照读的地方
+  - serializable：快照读退化为当前读
+- MVCC：多版本并发控制，维护一个数据的多个版本，使读写没有冲突，快照读为 MySQL 实现 MVCC 提供了一个非阻塞读功能。依赖于数据库记录的三个隐式字段，undo log，readView
+
+#### 三个隐式字段
+
+- DB_TRX_ID：最近修改事务 ID，记录插入或最后一次修改记录的事务 ID
+- DB_ROLL_PTR：回滚指针，指向记录的上一个版本，配合 undo log
+- DB_ROW_ID：隐藏主键，没有指定主键，则生成该隐藏字段
+
+#### undo log
+
+- 当 insert 时，产生的 undo log 只在回滚时需要，在事务提交后，可立即删除
+- 当 update，delete 时，undo log 不仅回滚需要，快照读也需要，不会立即删除
+
+undo log 版本链
+
+<img src="https://raw.githubusercontent.com/Moriic/picture/main/image/1711817117_0.png" alt="image-20240331004516904" style="zoom: 67%;" />
+
+#### readView
+
+readView 是快照读 SQL 执行时 MVCC 提取数据的依据，记录并维护系统当前活跃的事务(未提交的)id
+
+- m_ids：当前活跃的事务 ID 集合
+- min_trx_id：最小活跃事务 ID
+- max_trx_id：最大活跃事务 ID + 1
+- creator_trx_id：ReadView创建者的事务ID
+
+![image-20240331005120530](https://raw.githubusercontent.com/Moriic/picture/main/image/1711817481_0.png)
+
