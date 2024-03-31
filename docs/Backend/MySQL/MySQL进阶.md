@@ -807,3 +807,5 @@ readView 是快照读 SQL 执行时 MVCC 提取数据的依据，记录并维护
 
 ![image-20240331005120530](https://raw.githubusercontent.com/Moriic/picture/main/image/1711817481_0.png)
 
+
+
