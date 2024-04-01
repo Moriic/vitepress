@@ -124,7 +124,9 @@ class LRUCache {
         addRecently(key, val);
     }
 }
+```
 
+```java
 class LRUCache2 {
     LinkedHashMap<Integer, Integer> cache = new LinkedHashMap<>();
     int capacity;
@@ -158,7 +160,7 @@ class LRUCache2 {
             int oldestKey = cache.keySet().iterator().next();
             cache.remove(oldestKey);
         }
-        cache.put(key, val);                                       <
+        cache.put(key, val);
     }
 }
 ```
