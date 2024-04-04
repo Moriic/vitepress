@@ -41,7 +41,7 @@ Cache Aside Pattern 中服务端需要同时维系 db 和 cache，并且是以 d
 
 > 举例：请求 1 先读数据 A，请求 2 随后写数据 A，并且数据 A 在请求 1 请求之前不在缓存中的话，也有可能产生数据不一致性的问题。
 >
-> 过程为：请求 1 从 db 读数据 A-> 请求 2 更新 db 中的数据 A（此时缓存中无数据 A ，故不用执行删除缓存操作 ） -> 请求 1 将数据 A 写入 cache
+> 过程为：请求 1 从 db 读数据 A-> 请求 2 更新 db 中的数据 A(此时缓存中无数据 A ，故不用执行删除缓存操作 ) -> 请求 1 将数据 A 写入 cache
 
 缺陷：
 
@@ -56,10 +56,10 @@ Read/Write Through Pattern 中服务端把 cache 视为主要数据存储，从�
 
 Redis 并没有提供 cache 将数据写入 db 的功能。
 
-**写（Write Through）：**
+**写(Write Through)：**
 
 - 先查 cache，cache 中不存在，直接更新 db。
-- cache 中存在，则先更新 cache，然后 cache 服务自己更新 db（**同步更新 cache 和 db**）。
+- cache 中存在，则先更新 cache，然后 cache 服务自己更新 db(**同步更新 cache 和 db**)。
 
 **读(Read Through)：**
 
@@ -77,16 +77,16 @@ Write Behind Pattern 下 db 的写性能非常高，非常适合一些数据经�
 - **分布式锁**：通过 Redis 来做分布式锁是一种比较常见的方式。通常情况下，我们都是基于 Redisson 来实现分布式锁。关于 Redis 实现分布式锁的详细介绍，可以看我写的这篇文章：[分布式锁详解](https://javaguide.cn/distributed-system/distributed-lock.html)
 - **限流**：一般是通过 Redis + Lua 脚本的方式来实现限流。如果不想自己写 Lua 脚本的话，也可以直接利用 Redisson 中的 `RRateLimiter` 来实现分布式限流，其底层实现就是基于 Lua 代码+令牌桶算法。
 - **消息队列**：Redis 自带的 List 数据结构可以作为一个简单的队列使用。Redis 5.0 中增加的 Stream 类型的数据结构更加适合用来做消息队列。它比较类似于 Kafka，有主题和消费组的概念，支持消息持久化以及 ACK 机制。
-- **延时队列**：Redisson 内置了延时队列（基于 Sorted Set 实现的）。
+- **延时队列**：Redisson 内置了延时队列(基于 Sorted Set 实现的)。
 - **分布式 Session** ：利用 String 或者 Hash 数据类型保存 Session 数据，所有的服务器都可以访问。
-- **复杂业务场景**：通过 Redis 以及 Redis 扩展（比如 Redisson）提供的数据结构，我们可以很方便地完成很多复杂的业务场景比如通过 Bitmap 统计活跃用户、通过 Sorted Set 维护排行榜。
+- **复杂业务场景**：通过 Redis 以及 Redis 扩展(比如 Redisson)提供的数据结构，我们可以很方便地完成很多复杂的业务场景比如通过 Bitmap 统计活跃用户、通过 Sorted Set 维护排行榜。
 
 ## Redis 数据类型
 
-- **5 种基础数据类型**：String（字符串）、List（列表）、Set（集合）、Hash（散列）、Zset（有序集合）。
-- **3 种特殊数据类型**：HyperLogLog（基数统计）、Bitmap （位图）、Geospatial (地理位置)。
+- **5 种基础数据类型**：String(字符串)、List(列表)、Set(集合)、Hash(散列)、Zset(有序集合)。
+- **3 种特殊数据类型**：HyperLogLog(基数统计)、Bitmap (位图)、Geospatial (地理位置)。
 
-除了上面提到的之外，还有一些其他的比如 [Bloom filter（布隆过滤器）](https://javaguide.cn/cs-basics/data-structure/bloom-filter.html)
+除了上面提到的之外，还有一些其他的比如 [Bloom filter(布隆过滤器)](https://javaguide.cn/cs-basics/data-structure/bloom-filter.html)
 
 Redis 5 种基本数据类型对应的底层数据结构实现如下表所示：
 
@@ -98,7 +98,7 @@ Redis 3.2 之前，List 底层实现是 LinkedList 或者 ZipList。 Redis 3.2 �
 
 ### String
 
-虽然 Redis 是用 C 语言写的，但是 Redis 并没有使用 C 的字符串表示，而是自己构建了一种 **简单动态字符串**（Simple Dynamic String，**SDS**）。相比于 C 的原生字符串，Redis 的 SDS 不光可以保存文本数据还可以保存二进制数据，并且获取字符串长度复杂度为 O(1)（C 字符串为 O(N)）,除此之外，Redis 的 SDS API 是安全的，不会造成缓冲区溢出。
+虽然 Redis 是用 C 语言写的，但是 Redis 并没有使用 C 的字符串表示，而是自己构建了一种 **简单动态字符串**(Simple Dynamic String，**SDS**)。相比于 C 的原生字符串，Redis 的 SDS 不光可以保存文本数据还可以保存二进制数据，并且获取字符串长度复杂度为 O(1)(C 字符串为 O(N)), 除此之外，Redis 的 SDS API 是安全的，不会造成缓冲区溢出。
 
 #### 应用场景
 
@@ -109,12 +109,12 @@ Redis 3.2 之前，List 底层实现是 LinkedList 或者 ZipList。 Redis 3.2 �
 
 **需要计数的场景**
 
-- 举例：用户单位时间的请求数（简单限流可以用到）、页面单位时间的访问数。
+- 举例：用户单位时间的请求数(简单限流可以用到)、页面单位时间的访问数。
 - 相关命令：`SET`、`GET`、`INCR`、`DECR` 。
 
 **分布式锁**
 
-利用 `SETNX key value` 命令可以实现一个最简易的分布式锁（存在一些缺陷，通常不建议这样实现分布式锁）。
+利用 `SETNX key value` 命令可以实现一个最简易的分布式锁(存在一些缺陷，通常不建议这样实现分布式锁)。
 
 ### List
 
@@ -137,14 +137,14 @@ Redis 的 List 的实现为一个 **双向链表**，即可以支持反向查找
 
 ### Hash
 
-Redis 中的 Hash 是一个 String 类型的 field-value（键值对） 的映射表，特别适合用于存储对象，后续操作的时候，你可以直接修改这个对象中的某些字段的值。Hash 类似于 JDK1.8 前的 `HashMap`，内部实现也差不多(数组 + 链表)
+Redis 中的 Hash 是一个 String 类型的 field-value(键值对) 的映射表，特别适合用于存储对象，后续操作的时候，你可以直接修改这个对象中的某些字段的值。Hash 类似于 JDK1.8 前的 `HashMap`，内部实现也差不多(数组 + 链表)
 
 #### 应用场景
 
 **对象数据存储场景**
 
 - 举例：用户信息、商品信息、文章信息、购物车信息。
-- 相关命令：`HSET` （设置单个字段的值）、`HMSET`（设置多个字段的值）、`HGET`（获取单个字段的值）、`HMGET`（获取多个字段的值）。
+- 相关命令：`HSET` (设置单个字段的值)、`HMSET`(设置多个字段的值)、`HGET`(获取单个字段的值)、`HMGET`(获取多个字段的值)。
 
 ### Set
 
@@ -160,25 +160,25 @@ Redis 中的 Set 类型是一种无序集合，集合中的元素没有先后顺
 
 **需要存放的数据不能重复的场景**
 
-- 举例：网站 UV 统计（数据量巨大的场景还是 `HyperLogLog`更适合一些）、文章点赞、动态点赞等场景。
-- 相关命令：`SCARD`（获取集合数量） 
+- 举例：网站 UV 统计(数据量巨大的场景还是 `HyperLogLog` 更适合一些)、文章点赞、动态点赞等场景。
+- 相关命令：`SCARD`(获取集合数量) 
 
 **需要获取多个数据源交集、并集和差集的场景**
 
-- 举例：共同好友(交集)、共同粉丝(交集)、共同关注(交集)、好友推荐（差集）、音乐推荐（差集）、订阅号推荐（差集+交集） 等场景。
-- 相关命令：`SINTER`（交集）、`SINTERSTORE` （交集）、`SUNION` （并集）、`SUNIONSTORE`（并集）、`SDIFF`（差集）、`SDIFFSTORE` （差集）。
+- 举例：共同好友(交集)、共同粉丝(交集)、共同关注(交集)、好友推荐(差集)、音乐推荐(差集)、订阅号推荐(差集+交集) 等场景。
+- 相关命令：`SINTER`(交集)、`SINTERSTORE` (交集)、`SUNION` (并集)、`SUNIONSTORE`(并集)、`SDIFF`(差集)、`SDIFFSTORE` (差集)。
 
 **需要随机获取数据源中的元素的场景**
 
 - 举例：抽奖系统、随机点名等场景。
-- 相关命令：`SPOP`（随机获取集合中的元素并移除，适合不允许重复中奖的场景）、`SRANDMEMBER`（随机获取集合中的元素，适合允许重复中奖的场景）。
+- 相关命令：`SPOP`(随机获取集合中的元素并移除，适合不允许重复中奖的场景)、`SRANDMEMBER`(随机获取集合中的元素，适合允许重复中奖的场景)。
 
 ### Sorted Set
 
 Sorted Set 类似于 Set，但和 Set 相比，Sorted Set 增加了一个权重参数 `score`，使得集合中的元素能够按 `score` 进行有序排列，还可以通过 `score` 的范围来获取元素的列表。有点像是 Java 中 `HashMap` 和 `TreeSet` 的结合体。
 
-- `ZRANGE key start end`：获取指定有序集合 start 和 end 之间的元素（score 从低到高）
-- `ZREVRANGE key start end`：获取指定有序集合 start 和 end 之间的元素（score 从高到底）
+- `ZRANGE key start end`：获取指定有序集合 start 和 end 之间的元素(score 从低到高)
+- `ZREVRANGE key start end`：获取指定有序集合 start 和 end 之间的元素(score 从高到底)
 - `ZREVRANK key member`：获取指定有序集合中指定元素的排名(score 从大到小排序)
 
 #### 应用场景
@@ -186,13 +186,13 @@ Sorted Set 类似于 Set，但和 Set 相比，Sorted Set 增加了一个权重�
 **需要随机获取数据源中的元素根据某个权重进行排序的场景**
 
 - 举例：各种排行榜比如直播间送礼物的排行榜、朋友圈的微信步数排行榜、王者荣耀中的段位排行榜、话题热度排行榜等等。
-- 相关命令：`ZRANGE` (从小到大排序)、 `ZREVRANGE` （从大到小排序）、`ZREVRANK` (指定元素排名)。
+- 相关命令：`ZRANGE` (从小到大排序)、 `ZREVRANGE` (从大到小排序)、`ZREVRANK` (指定元素排名)。
 
 ### BitMap(位图)
 
-Bitmap 存储的是连续的二进制数字（0 和 1），通过 Bitmap, 只需要一个 bit 位来表示某个元素对应的值或者状态，key 就是对应元素本身 。我们知道 8 个 bit 可以组成一个 byte，所以 Bitmap 本身会极大的节省储存空间。
+Bitmap 存储的是连续的二进制数字(0 和 1)，通过 Bitmap, 只需要一个 bit 位来表示某个元素对应的值或者状态，key 就是对应元素本身 。我们知道 8 个 bit 可以组成一个 byte，所以 Bitmap 本身会极大的节省储存空间。
 
-你可以将 Bitmap 看作是一个存储二进制数字（0 和 1）的数组，数组中每个元素的下标叫做 offset（偏移量）。
+你可以将 Bitmap 看作是一个存储二进制数字(0 和 1)的数组，数组中每个元素的下标叫做 offset(偏移量)。
 
 | 命令                                  | 介绍                                                         |
 | ------------------------------------- | ------------------------------------------------------------ |
@@ -203,21 +203,21 @@ Bitmap 存储的是连续的二进制数字（0 和 1），通过 Bitmap, 只需
 
 #### 应用场景
 
-**需要保存状态信息（0/1 即可表示）的场景**
+**需要保存状态信息(0/1 即可表示)的场景**
 
-- 举例：用户签到情况、活跃用户情况、用户行为统计（比如是否点赞过某个视频）。
+- 举例：用户签到情况、活跃用户情况、用户行为统计(比如是否点赞过某个视频)。
 - 相关命令：`SETBIT`、`GETBIT`、`BITCOUNT`、`BITOP`
 
 ### HyperLogLog(基数统计)
 
 HyperLogLog 是一种有名的基数计数概率算法 ，基于 LogLog Counting(LLC)优化改进得来，并不是 Redis 特有的，Redis 只是实现了这个算法并提供了一些开箱即用的 API。
 
-Redis 提供的 HyperLogLog 占用空间非常非常小，只需要 12k 的空间就能存储接近`2^64`个不同元素。这是真的厉害，这就是数学的魅力么！并且，Redis 对 HyperLogLog 的存储结构做了优化，采用两种方式计数：
+Redis 提供的 HyperLogLog 占用空间非常非常小，只需要 12k 的空间就能存储接近 `2^64` 个不同元素。这是真的厉害，这就是数学的魅力么！并且，Redis 对 HyperLogLog 的存储结构做了优化，采用两种方式计数：
 
 - **稀疏矩阵**：计数较少的时候，占用空间很小。
 - **稠密矩阵**：计数达到某个阈值的时候，占用 12k 的空间。
 
-基数计数概率算法为了节省内存并不会直接存储元数据，而是通过一定的概率统计方法预估基数值（集合中包含元素的个数）。因此， HyperLogLog 的计数结果并不是一个精确值，存在一定的误差（标准误差为 `0.81%` ）。
+基数计数概率算法为了节省内存并不会直接存储元数据，而是通过一定的概率统计方法预估基数值(集合中包含元素的个数)。因此， HyperLogLog 的计数结果并不是一个精确值，存在一定的误差(标准误差为 `0.81%` )。
 
 | 命令                                      | 介绍                                                         |
 | ----------------------------------------- | ------------------------------------------------------------ |
@@ -227,16 +227,16 @@ Redis 提供的 HyperLogLog 占用空间非常非常小，只需要 12k 的空�
 
 #### 应用场景
 
-**数量量巨大（百万、千万级别以上）的计数场景**
+**数量量巨大(百万、千万级别以上)的计数场景**
 
 - 举例：热门网站每日/每周/每月访问 ip 数统计、热门帖子 uv 统计、
 - 相关命令：`PFADD`、`PFCOUNT` 
 
 ### Geospatial(地理位置)
 
-> [GEO原理](https://juejin.cn/post/6844903966061363207)
+> [GEO 原理](https://juejin.cn/post/6844903966061363207)
 
-Geospatial index（地理空间索引，简称 GEO） 主要用于存储地理位置信息，基于 Sorted Set 实现。
+Geospatial index(地理空间索引，简称 GEO) 主要用于存储地理位置信息，基于 Sorted Set 实现。
 
 通过 GEO 我们可以轻松实现两个位置距离的计算、获取指定位置附近的元素等功能。
 
@@ -245,7 +245,7 @@ Geospatial index（地理空间索引，简称 GEO） 主要用于存储地理�
 | GEOADD key longitude1 latitude1 member1 ...      | 添加一个或多个元素对应的经纬度信息到 GEO 中                  |
 | GEOPOS key member1 member2 ...                   | 返回给定元素的经纬度信息                                     |
 | GEODIST key member1 member2 M/KM/FT/MI           | 返回两个给定元素之间的距离                                   |
-| GEORADIUS key longitude latitude radius distance | 获取指定位置附近 distance 范围内的其他元素，支持 ASC(由近到远)、DESC（由远到近）、Count(数量) 等参数 |
+| GEORADIUS key longitude latitude radius distance | 获取指定位置附近 distance 范围内的其他元素，支持 ASC(由近到远)、DESC(由远到近)、Count(数量) 等参数 |
 | GEORADIUSBYMEMBER key member radius distance     | 类似于 GEORADIUS 命令，只是参照的中心点是 GEO 中的元素       |
 
 GEO 中存储的地理位置信息的经纬度数据通过 GeoHash 算法转换成了一个整数，这个整数作为 Sorted Set 的 score(权重参数)使用。
@@ -256,3 +256,45 @@ GEO 中存储的地理位置信息的经纬度数据通过 GeoHash 算法转换�
 
 - 举例：附近的人。
 - 相关命令: `GEOADD`、`GEORADIUS`、`GEORADIUSBYMEMBER` 。
+
+## 持久化机制
+
+使用缓存的时候，我们经常需要对内存中的数据进行持久化也就是将内存中的数据写入到硬盘中。大部分原因是为了之后重用数据(比如重启机器、机器故障之后恢复数据)，或者是为了做数据同步(比如 Redis 集群的主从节点通过 RDB 文件同步数据)。
+
+Redis 不同于 Memcached 的很重要一点就是，Redis 支持持久化，而且支持 3 种持久化方式:
+
+- 快照(snapshotting，RDB)
+- 只追加文件(append-only file, AOF)
+- RDB 和 AOF 的混合持久化(Redis 4.0 新增)
+
+### RDB 持久化
+
+Redis 可以通过创建快照来获得存储在内存里面的数据在 **某个时间点** 上的副本。Redis 创建快照之后，可以对快照进行备份，可以将快照复制到其他服务器从而创建具有相同数据的服务器副本(Redis 主从结构，主要用来提高 Redis 性能)，还可以将快照留在原地以便重启服务器的时候使用。
+
+Redis 提供了两个命令来生成 RDB 快照文件：
+
+- `save` : 同步保存操作，会阻塞 Redis 主线程；
+- `bgsave` : fork 出一个子进程，子进程执行，不会阻塞 Redis 主线程，默认选项。
+
+### AOF 持久化
+
+与快照持久化相比，AOF 持久化的实时性更好。默认情况下 Redis 没有开启 AOF(append only file)方式的持久化(Redis 6.0 之后已经默认是开启了)，可以通过 `appendonly` 参数开启。
+
+开启 AOF 持久化后每执行一条会更改 Redis 中的数据的命令，Redis 就会将该命令写入到 AOF 缓冲区 `server.aof_buf` 中，然后再写入到 AOF 文件中(此时还在系统内核缓存区未同步到磁盘)，最后再根据持久化方式( `fsync` 策略)的配置来决定何时将系统内核缓存区的数据同步到硬盘中的。
+
+只有同步到磁盘中才算持久化保存了，否则依然存在数据丢失的风险，比如说：系统内核缓存区的数据还未同步，磁盘机器就宕机了，那这部分数据就算丢失了。
+
+AOF 文件的保存位置和 RDB 文件的位置相同，都是通过 `dir` 参数设置的，默认的文件名是 `appendonly.aof`。
+
+![aof-work-process](https://raw.githubusercontent.com/Moriic/picture/main/image/1712215946_0.png)
+
+AOF 持久化功能的实现可以简单分为 5 步：
+
+1. **命令追加(append)**：所有的写命令会追加到 AOF 缓冲区中。
+2. **文件写入(write)**：将 AOF 缓冲区的数据写入到 AOF 文件中。这一步需要调用 `write` 函数(系统调用)，`write` 将数据写入到了系统内核缓冲区之后直接返回了(延迟写)。注意！！！此时并没有同步到磁盘。
+3. **文件同步(fsync)**：AOF 缓冲区根据对应的持久化方式(`fsync` 策略)向硬盘做同步操作。这一步需要调用 `fsync` 函数(系统调用)， `fsync` 针对单个文件操作，对其进行强制硬盘同步，`fsync` 将阻塞直到写入磁盘完成后返回，保证了数据持久化。
+4. **文件重写(rewrite)**：随着 AOF 文件越来越大，需要定期对 AOF 文件进行重写，达到压缩的目的。
+5. **重启加载(load)**：当 Redis 重启时，可以加载 AOF 文件进行数据恢复。
+
+- `write`：写入系统内核缓冲区之后直接返回（仅仅是写到缓冲区），不会立即同步到硬盘。虽然提高了效率，但也带来了数据丢失的风险。同步硬盘操作通常依赖于系统调度机制，Linux 内核通常为 30s 同步一次，具体值取决于写出的数据量和 I/O 缓冲区的状态。
+- `fsync`：`fsync` 用于强制刷新系统内核缓冲区（同步到到磁盘），确保写磁盘操作结束才会返回。
