@@ -431,3 +431,5 @@ Redis 通过一个叫做过期字典（可以看作是 hash 表）来保存数�
 4. **allkeys-lru（least recently used）**：当内存不足以容纳新写入数据时，在键空间中，移除最近最少使用的 key（这个是最常用的）。
 5. **allkeys-random**：从数据集（`server.db[i].dict`）中任意选择数据淘汰。
 6. **no-eviction**：禁止驱逐数据，也就是说当内存不足以容纳新写入数据时，新写入操作会报错。这个应该没人使用吧！
+
+s
