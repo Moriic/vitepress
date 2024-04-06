@@ -5,14 +5,13 @@ layout: home
 hero:
   name: "Morii"
   text: "Blog"
-  tagline: My great project tagline
   actions:
     - theme: brand
-      text: Markdown Examples
-      link: /markdown-examples
+      text: Interview
+      link: /Interview/ComputerBasics/Network
     - theme: alt
-      text: API Examples
-      link: /api-examples
+      text: Backend
+      link: /Backend
 
 features:
   - title: Feature A
