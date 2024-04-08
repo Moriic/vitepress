@@ -295,12 +295,12 @@ try {
 
 ### try-with-resources
 
-- **适用范围（资源的定义）：** 任何实现 `java.lang.AutoCloseable`或者 `java.io.Closeable` 的对象
+- **适用范围（资源的定义）：** 任何实现 `java.lang.AutoCloseable` 或者 `java.io.Closeable` 的对象
 - **关闭资源和 finally 块的执行顺序：** 在 `try-with-resources` 语句中，任何 catch 或 finally 块在声明的资源关闭后运行
 
-> 面对必须要关闭的资源，我们总是应该优先使用 `try-with-resources` 而不是`try-finally`。随之产生的代码更简短，更清晰，产生的异常对我们也更有用。`try-with-resources`语句让我们更容易编写必须要关闭的资源的代码，若采用`try-finally`则几乎做不到这点
+> 面对必须要关闭的资源，我们总是应该优先使用 `try-with-resources` 而不是 `try-finally`。随之产生的代码更简短，更清晰，产生的异常对我们也更有用。`try-with-resources` 语句让我们更容易编写必须要关闭的资源的代码，若采用 `try-finally` 则几乎做不到这点
 
-Java 中类似于`InputStream`、`OutputStream`、`Scanner`、`PrintWriter`等的资源都需要我们调用`close()`方法来手动关闭，一般情况下我们都是通过`try-catch-finally`语句来实现这个需求，如下
+Java 中类似于 `InputStream`、`OutputStream`、`Scanner`、`PrintWriter` 等的资源都需要我们调用 `close()` 方法来手动关闭，一般情况下我们都是通过 `try-catch-finally` 语句来实现这个需求，如下
 
 ```java
 //读取文本文件的内容
@@ -340,3 +340,368 @@ catch (IOException e) {
 
 通过反射你可以获取任意一个类的所有属性和方法，你还可以调用这些方法和属性。
 
+### 获取 Class 对象
+
+- 知道具体类：`Class alunbarClass = TargetObject.class;`
+- 不知道具体类：
+  - 通过路径：`Class alunbarClass1 = Class.forName("cn.javaguide.TargetObject");`
+  - 通过对象实例：`TargetObject o = new TargetObject(); Class alunbarClass2 = o.getClass();`
+  - 通过类加载器：`ClassLoader.getSystemClassLoader().loadClass("cn.javaguide.TargetObject");`
+
+### 使用反射调用方法
+
+```java
+ /**
+ * 获取 TargetObject 类的 Class 对象并且创建 TargetObject 类实例
+ */
+Class<?> targetClass = Class.forName("cn.javaguide.TargetObject");
+TargetObject targetObject = (TargetObject) targetClass.newInstance();
+/**
+ * 获取 TargetObject 类中定义的所有方法
+ */
+Method[] methods = targetClass.getDeclaredMethods();
+for (Method method : methods) {
+    System.out.println(method.getName());
+}
+
+/**
+ * 获取指定方法并调用
+ */
+Method publicMethod = targetClass.getDeclaredMethod("publicMethod",
+        String.class);
+
+publicMethod.invoke(targetObject, "JavaGuide");
+
+/**
+ * 获取指定参数并对参数进行修改
+ */
+Field field = targetClass.getDeclaredField("value");
+//为了对类中的参数进行修改我们取消安全检查
+field.setAccessible(true);
+field.set(targetObject, "JavaGuide");
+
+/**
+ * 调用 private 方法
+ */
+Method privateMethod = targetClass.getDeclaredMethod("privateMethod");
+//为了调用private方法我们取消安全检查
+privateMethod.setAccessible(true);
+privateMethod.invoke(targetObject);
+```
+
+### 引用场景
+
+- 动态代理：Spring，MyBatis
+- 注解
+
+## 注解
+
+### 自定义注解
+
+```java
+@Target(ElementType.METHOD)
+@Retention(RetentionPolicy.SOURCE)
+public @interface Override {
+}
+
+public interface Override extends Annotation{
+}
+```
+
+### 注解的解析方法有哪几种？
+
+注解只有被解析之后才会生效，常见的解析方法有两种：
+
+- **编译期直接扫描**：编译器在编译 Java 代码的时候扫描对应的注解并处理，比如某个方法使用`@Override` 注解，编译器在编译的时候就会检测当前的方法是否重写了父类对应的方法。
+- **运行期通过反射处理**：像框架中自带的注解(比如 Spring 框架的 `@Value`、`@Component`)都是通过反射来进行处理的
+
+## 序列化和反序列化
+
+如果我们需要持久化 Java 对象比如将 Java 对象保存在文件中，或者在网络传输 Java 对象，这些场景都需要用到序列化。
+
+简单来说：
+
+- **序列化**：将数据结构或对象转换成二进制字节流的过程
+- **反序列化**：将在序列化过程中所生成的二进制字节流转换成数据结构或者对象的过程
+
+属于OSI七层模型的表示层，属于TCP/IP四层模型的应用层
+
+### JDK 自带序列化
+
+```java
+public class RpcRequest implements Serializable {
+    private static final long serialVersionUID = 1905122041950251207L;
+	...
+}
+```
+
+**serialVersionUID 有什么作用？**
+
+序列化号 `serialVersionUID` 属于版本控制的作用。反序列化时，会检查 `serialVersionUID` 是否和当前类的 `serialVersionUID` 一致。如果 `serialVersionUID` 不一致则会抛出 `InvalidClassException` 异常。强烈推荐每个序列化类都手动指定其 `serialVersionUID`，如果不手动指定，那么编译器会动态生成默认的 `serialVersionUID`。
+
+**serialVersionUID 不是被 static 变量修饰了吗？为什么还会被“序列化”？**
+
+`static` 修饰的变量是静态变量，位于方法区，本身是不会被序列化的。但是，`serialVersionUID` 的序列化做了特殊处理，在序列化时，会将 `serialVersionUID` 序列化到二进制字节流中；在反序列化时，也会解析它并做一致性判断。
+
+**如果有些字段不想进行序列化怎么办？**
+
+对于不想进行序列化的变量，可以使用 `transient` 关键字修饰。
+
+`transient` 关键字的作用是：阻止实例中那些用此关键字修饰的的变量序列化；当对象被反序列化时，被 `transient` 修饰的变量值不会被持久化和恢复。
+
+关于 `transient` 还有几点注意：
+
+- `transient` 只能修饰变量，不能修饰类和方法。
+- `transient` 修饰的变量，在反序列化后变量值将会被置成类型的默认值。例如，如果是修饰 `int` 类型，那么反序列后结果就是 `0`。
+- `static` 变量因为不属于任何对象(Object)，所以无论有没有 `transient` 关键字修饰，均不会被序列化。
+
+**为什么不推荐使用 JDK 自带的序列化？**
+
+我们很少或者说几乎不会直接使用 JDK 自带的序列化方式，主要原因有下面这些原因：
+
+- **不支持跨语言调用** : 如果调用的是其他语言开发的服务的时候就不支持了。
+- **性能差**：相比于其他序列化框架性能更低，主要原因是序列化之后的字节数组体积较大，导致传输成本加大。
+- **存在安全问题**：序列化和反序列化本身并不存在问题。但当输入的反序列化的数据可被用户控制，那么攻击者即可通过构造恶意输入，让反序列化产生非预期的对象，在此过程中执行构造的任意代码。
+
+## Java IO
+
+IO 即 `Input/Output`，输入和输出。数据输入到计算机内存的过程即输入，反之输出到外部存储（比如数据库，文件，远程主机）的过程即输出。数据传输过程类似于水流，因此称为 IO 流。IO 流在 Java 中分为输入流和输出流，而根据数据的处理方式又分为字节流和字符流。
+
+Java IO 流的 40 多个类都是从如下 4 个抽象类基类中派生出来的。
+
+- `InputStream`/`Reader`: 所有的输入流的基类，前者是字节输入流，后者是字符输入流。
+- `OutputStream`/`Writer`: 所有输出流的基类，前者是字节输出流，后者是字符输出流。
+
+### 字节流
+
+#### InputStream
+
+`InputStream` 常用方法：
+
+- `read()`：返回输入流中下一个字节的数据。返回的值介于 0 到 255 之间。如果未读取任何字节，则代码返回 `-1` ，表示文件结束。
+- `read(byte b[ ])` : 从输入流中读取一些字节存储到数组 `b` 中。如果数组 `b` 的长度为零，则不读取。如果没有可用字节读取，返回 `-1`。如果有可用字节读取，则最多读取的字节数最多等于 `b.length` ， 返回读取的字节数。这个方法等价于 `read(b, 0, b.length)`。
+- `read(byte b[], int off, int len)`：在`read(byte b[ ])` 方法的基础上增加了 `off` 参数（偏移量）和 `len` 参数（要读取的最大字节数）。
+- `skip(long n)`：忽略输入流中的 n 个字节 ,返回实际忽略的字节数。
+- `available()`：返回输入流中可以读取的字节数。
+- `close()`：关闭输入流释放相关的系统资源。
+
+从 Java 9 开始，`InputStream` 新增加了多个实用的方法：
+
+- `readAllBytes()`：读取输入流中的所有字节，返回字节数组。
+- `readNBytes(byte[] b, int off, int len)`：阻塞直到读取 `len` 个字节。
+- `transferTo(OutputStream out)`：将所有字节从一个输入流传递到一个输出流。
+
+`FileInputStream` 是一个比较常用的字节输入流对象，可直接指定文件路径，可以直接读取单字节数据，也可以读取至字节数组中。
+
+```java
+try (InputStream fis = new FileInputStream("input.txt")) {
+    System.out.println("Number of remaining bytes:"
+            + fis.available());
+    int content;
+    long skip = fis.skip(2);
+    System.out.println("The actual number of bytes skipped:" + skip);
+    System.out.print("The content read from file:");
+    while ((content = fis.read()) != -1) {
+        System.out.print((char) content);
+    }
+} catch (IOException e) {
+    e.printStackTrace();
+}
+```
+
+通常会配合 `BufferedInputStream`（字节缓冲输入流，后文会讲到）来使用。
+
+```java
+// 新建一个 BufferedInputStream 对象
+BufferedInputStream bufferedInputStream = new BufferedInputStream(new FileInputStream("input.txt"));
+// 读取文件的内容并复制到 String 对象中
+String result = new String(bufferedInputStream.readAllBytes());
+System.out.println(result);
+```
+
+`DataInputStream` 用于读取指定类型数据，不能单独使用，必须结合其它流，比如 `FileInputStream` 。
+
+```java
+FileInputStream fileInputStream = new FileInputStream("input.txt");
+//必须将fileInputStream作为构造参数才能使用
+DataInputStream dataInputStream = new DataInputStream(fileInputStream);
+//可以读取任意具体的类型数据
+dataInputStream.readBoolean();
+dataInputStream.readInt();
+dataInputStream.readUTF();
+```
+
+`ObjectInputStream` 用于从输入流中读取 Java 对象（反序列化），`ObjectOutputStream` 用于将对象写入到输出流(序列化)。
+
+```java
+ObjectInputStream input = new ObjectInputStream(new FileInputStream("object.data"));
+MyClass object = (MyClass) input.readObject();
+input.close();
+```
+
+另外，用于序列化和反序列化的类必须实现 `Serializable` 接口，对象中如果有属性不想被序列化，使用 `transient` 修饰。
+
+#### OutputStream
+
+`OutputStream`用于将数据（字节信息）写入到目的地（通常是文件），`java.io.OutputStream`抽象类是所有字节输出流的父类。
+
+`OutputStream` 常用方法：
+
+- `write(int b)`：将特定字节写入输出流。
+- `write(byte b[ ])` : 将数组`b` 写入到输出流，等价于 `write(b, 0, b.length)` 。
+- `write(byte[] b, int off, int len)` : 在`write(byte b[ ])` 方法的基础上增加了 `off` 参数（偏移量）和 `len` 参数（要读取的最大字节数）。
+- `flush()`：刷新此输出流并强制写出所有缓冲的输出字节。
+- `close()`：关闭输出流释放相关的系统资源。
+
+`FileOutputStream` 是最常用的字节输出流对象，可直接指定文件路径，可以直接输出单字节数据，也可以输出指定的字节数组。
+
+`FileOutputStream` 代码示例：
+
+```java
+try (FileOutputStream output = new FileOutputStream("output.txt")) {
+    byte[] array = "JavaGuide".getBytes();
+    output.write(array);
+} catch (IOException e) {
+    e.printStackTrace();
+}
+```
+
+类似于 `FileInputStream`，`FileOutputStream` 通常也会配合 `BufferedOutputStream`（字节缓冲输出流，后文会讲到）来使用。
+
+```java
+FileOutputStream fileOutputStream = new FileOutputStream("output.txt");
+BufferedOutputStream bos = new BufferedOutputStream(fileOutputStream)
+```
+
+**`DataOutputStream`** 用于写入指定类型数据，不能单独使用，必须结合其它流，比如 `FileOutputStream` 。
+
+```java
+// 输出流
+FileOutputStream fileOutputStream = new FileOutputStream("out.txt");
+DataOutputStream dataOutputStream = new DataOutputStream(fileOutputStream);
+// 输出任意数据类型
+dataOutputStream.writeBoolean(true);
+dataOutputStream.writeByte(1);
+```
+
+`ObjectInputStream` 用于从输入流中读取 Java 对象（`ObjectInputStream`,反序列化），`ObjectOutputStream`将对象写入到输出流(`ObjectOutputStream`，序列化)。
+
+```java
+ObjectOutputStream output = new ObjectOutputStream(new FileOutputStream("file.txt")
+Person person = new Person("Guide哥", "JavaGuide作者");
+output.writeObject(person);
+```
+
+### 字符流
+
+- 字符流是由 Java 虚拟机将字节转换得到的，这个过程还算是比较耗时。
+- 如果我们不知道编码类型就很容易出现乱码问题。
+
+因此，I/O 流就干脆提供了一个直接操作字符的接口，方便我们平时对字符进行流操作。如果音频文件、图片等媒体文件用字节流比较好，如果涉及到字符的话使用字符流比较好。
+
+字符流默认采用的是 `Unicode` 编码，我们可以通过构造方法自定义编码。顺便分享一下之前遇到的笔试题：常用字符编码所占字节数？`utf8` :英文占 1 字节，中文占 3 字节，`unicode`：任何字符都占 2 个字节，`gbk`：英文占 1 字节，中文占 2 字节
+
+#### Reader
+
+`Reader`用于从源头（通常是文件）读取数据（字符信息）到内存中，`java.io.Reader`抽象类是所有字符输入流的父类。
+
+`Reader` 用于读取文本， `InputStream` 用于读取原始字节。
+
+`Reader` 常用方法：
+
+- `read()` : 从输入流读取一个字符。
+- `read(char[] cbuf)` : 从输入流中读取一些字符，并将它们存储到字符数组 `cbuf`中，等价于 `read(cbuf, 0, cbuf.length)` 。
+- `read(char[] cbuf, int off, int len)`：在`read(char[] cbuf)` 方法的基础上增加了 `off` 参数（偏移量）和 `len` 参数（要读取的最大字符数）。
+- `skip(long n)`：忽略输入流中的 n 个字符 ,返回实际忽略的字符数。
+- `close()` : 关闭输入流并释放相关的系统资源。
+
+`InputStreamReader` 是字节流转换为字符流的桥梁，其子类 `FileReader` 是基于该基础上的封装，可以直接操作字符文件。
+
+```java
+// 字节流转换为字符流的桥梁
+public class InputStreamReader extends Reader {
+}
+// 用于读取字符文件
+public class FileReader extends InputStreamReader {
+}
+```
+
+`FileReader` 代码示例：
+
+```java
+try (FileReader fileReader = new FileReader("input.txt");) {
+    int content;
+    long skip = fileReader.skip(3);
+    System.out.println("The actual number of bytes skipped:" + skip);
+    System.out.print("The content read from file:");
+    while ((content = fileReader.read()) != -1) {
+        System.out.print((char) content);
+    }
+} catch (IOException e) {
+    e.printStackTrace();
+}
+```
+
+#### Writer
+
+`Writer`用于将数据（字符信息）写入到目的地（通常是文件），`java.io.Writer`抽象类是所有字符输出流的父类。
+
+`Writer` 常用方法：
+
+- `write(int c)` : 写入单个字符。
+- `write(char[] cbuf)`：写入字符数组 `cbuf`，等价于`write(cbuf, 0, cbuf.length)`。
+- `write(char[] cbuf, int off, int len)`：在`write(char[] cbuf)` 方法的基础上增加了 `off` 参数（偏移量）和 `len` 参数（要读取的最大字符数）。
+- `write(String str)`：写入字符串，等价于 `write(str, 0, str.length())` 。
+- `write(String str, int off, int len)`：在`write(String str)` 方法的基础上增加了 `off` 参数（偏移量）和 `len` 参数（要读取的最大字符数）。
+- `append(CharSequence csq)`：将指定的字符序列附加到指定的 `Writer` 对象并返回该 `Writer` 对象。
+- `append(char c)`：将指定的字符附加到指定的 `Writer` 对象并返回该 `Writer` 对象。
+- `flush()`：刷新此输出流并强制写出所有缓冲的输出字符。
+- `close()`:关闭输出流释放相关的系统资源。
+
+`OutputStreamWriter` 是字符流转换为字节流的桥梁，其子类 `FileWriter` 是基于该基础上的封装，可以直接将字符写入到文件。
+
+```java
+// 字符流转换为字节流的桥梁
+public class OutputStreamWriter extends Writer {
+}
+// 用于写入字符到文件
+public class FileWriter extends OutputStreamWriter {
+}
+```
+
+`FileWriter` 代码示例：
+
+```java
+try (Writer output = new FileWriter("output.txt")) {
+    output.write("你好，我是Guide。");
+} catch (IOException e) {
+    e.printStackTrace();
+}
+```
+
+### 字节缓冲流
+
+IO 操作是很消耗性能的，缓冲流将数据加载至缓冲区，一次性读取/写入多个字节，从而避免频繁的 IO 操作，提高流的传输效率。
+
+字节缓冲流这里采用了装饰器模式来增强 `InputStream` 和`OutputStream`子类对象的功能。
+
+举个例子，我们可以通过 `BufferedInputStream`（字节缓冲输入流）来增强 `FileInputStream` 的功能。
+
+```java
+// 新建一个 BufferedInputStream 对象
+BufferedInputStream bufferedInputStream = new BufferedInputStream(new FileInputStream("input.txt"));
+```
+
+字节流和字节缓冲流的性能差别主要体现在我们使用两者的时候都是调用 `write(int b)` 和 `read()` 这两个一次只读取一个字节的方法的时候。由于字节缓冲流内部有缓冲区（字节数组），因此，字节缓冲流会先将读取到的字节存放在缓存区，大幅减少 IO 次数，提高读取效率。
+
+取到的字节存放在缓存区，并从内部缓冲区中单独读取字节。这样大幅减少了 IO 次数，提高了读取效率。
+
+### 字符缓冲流
+
+`BufferedReader` （字符缓冲输入流）和 `BufferedWriter`（字符缓冲输出流）类似于 `BufferedInputStream`（字节缓冲输入流）和`BufferedOutputStream`（字节缓冲输入流），内部都维护了一个字节数组作为缓冲区。不过，前者主要是用来操作字符信息
+
+### 打印流
+
+`System.out` 实际是用于获取一个 `PrintStream` 对象，`print`方法实际调用的是 `PrintStream` 对象的 `write` 方法。
+
+`PrintStream` 属于字节打印流，与之对应的是 `PrintWriter` （字符打印流）。`PrintStream` 是 `OutputStream` 的子类，`PrintWriter` 是 `Writer` 的子类。
