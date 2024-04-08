@@ -412,7 +412,7 @@ public interface Override extends Annotation{
 
 注解只有被解析之后才会生效，常见的解析方法有两种：
 
-- **编译期直接扫描**：编译器在编译 Java 代码的时候扫描对应的注解并处理，比如某个方法使用`@Override` 注解，编译器在编译的时候就会检测当前的方法是否重写了父类对应的方法。
+- **编译期直接扫描**：编译器在编译 Java 代码的时候扫描对应的注解并处理，比如某个方法使用 `@Override` 注解，编译器在编译的时候就会检测当前的方法是否重写了父类对应的方法。
 - **运行期通过反射处理**：像框架中自带的注解(比如 Spring 框架的 `@Value`、`@Component`)都是通过反射来进行处理的
 
 ## 序列化和反序列化
@@ -424,7 +424,7 @@ public interface Override extends Annotation{
 - **序列化**：将数据结构或对象转换成二进制字节流的过程
 - **反序列化**：将在序列化过程中所生成的二进制字节流转换成数据结构或者对象的过程
 
-属于OSI七层模型的表示层，属于TCP/IP四层模型的应用层
+属于 OSI 七层模型的表示层，属于 TCP/IP 四层模型的应用层
 
 ### JDK 自带序列化
 
@@ -465,6 +465,8 @@ public class RpcRequest implements Serializable {
 
 ## Java IO
 
+![image-20240408115020710](https://raw.githubusercontent.com/Moriic/picture/main/image/1712548221_0.png)
+
 IO 即 `Input/Output`，输入和输出。数据输入到计算机内存的过程即输入，反之输出到外部存储（比如数据库，文件，远程主机）的过程即输出。数据传输过程类似于水流，因此称为 IO 流。IO 流在 Java 中分为输入流和输出流，而根据数据的处理方式又分为字节流和字符流。
 
 Java IO 流的 40 多个类都是从如下 4 个抽象类基类中派生出来的。
@@ -480,8 +482,8 @@ Java IO 流的 40 多个类都是从如下 4 个抽象类基类中派生出来�
 
 - `read()`：返回输入流中下一个字节的数据。返回的值介于 0 到 255 之间。如果未读取任何字节，则代码返回 `-1` ，表示文件结束。
 - `read(byte b[ ])` : 从输入流中读取一些字节存储到数组 `b` 中。如果数组 `b` 的长度为零，则不读取。如果没有可用字节读取，返回 `-1`。如果有可用字节读取，则最多读取的字节数最多等于 `b.length` ， 返回读取的字节数。这个方法等价于 `read(b, 0, b.length)`。
-- `read(byte b[], int off, int len)`：在`read(byte b[ ])` 方法的基础上增加了 `off` 参数（偏移量）和 `len` 参数（要读取的最大字节数）。
-- `skip(long n)`：忽略输入流中的 n 个字节 ,返回实际忽略的字节数。
+- `read(byte b[], int off, int len)`：在 `read(byte b[ ])` 方法的基础上增加了 `off` 参数（偏移量）和 `len` 参数（要读取的最大字节数）。
+- `skip(long n)`：忽略输入流中的 n 个字节 , 返回实际忽略的字节数。
 - `available()`：返回输入流中可以读取的字节数。
 - `close()`：关闭输入流释放相关的系统资源。
 
@@ -543,13 +545,13 @@ input.close();
 
 #### OutputStream
 
-`OutputStream`用于将数据（字节信息）写入到目的地（通常是文件），`java.io.OutputStream`抽象类是所有字节输出流的父类。
+`OutputStream` 用于将数据（字节信息）写入到目的地（通常是文件），`java.io.OutputStream` 抽象类是所有字节输出流的父类。
 
 `OutputStream` 常用方法：
 
 - `write(int b)`：将特定字节写入输出流。
-- `write(byte b[ ])` : 将数组`b` 写入到输出流，等价于 `write(b, 0, b.length)` 。
-- `write(byte[] b, int off, int len)` : 在`write(byte b[ ])` 方法的基础上增加了 `off` 参数（偏移量）和 `len` 参数（要读取的最大字节数）。
+- `write(byte b[ ])` : 将数组 `b` 写入到输出流，等价于 `write(b, 0, b.length)` 。
+- `write(byte[] b, int off, int len)` : 在 `write(byte b[ ])` 方法的基础上增加了 `off` 参数（偏移量）和 `len` 参数（要读取的最大字节数）。
 - `flush()`：刷新此输出流并强制写出所有缓冲的输出字节。
 - `close()`：关闭输出流释放相关的系统资源。
 
@@ -584,7 +586,7 @@ dataOutputStream.writeBoolean(true);
 dataOutputStream.writeByte(1);
 ```
 
-`ObjectInputStream` 用于从输入流中读取 Java 对象（`ObjectInputStream`,反序列化），`ObjectOutputStream`将对象写入到输出流(`ObjectOutputStream`，序列化)。
+`ObjectInputStream` 用于从输入流中读取 Java 对象（`ObjectInputStream`, 反序列化），`ObjectOutputStream` 将对象写入到输出流(`ObjectOutputStream`，序列化)。
 
 ```java
 ObjectOutputStream output = new ObjectOutputStream(new FileOutputStream("file.txt")
@@ -599,20 +601,20 @@ output.writeObject(person);
 
 因此，I/O 流就干脆提供了一个直接操作字符的接口，方便我们平时对字符进行流操作。如果音频文件、图片等媒体文件用字节流比较好，如果涉及到字符的话使用字符流比较好。
 
-字符流默认采用的是 `Unicode` 编码，我们可以通过构造方法自定义编码。顺便分享一下之前遇到的笔试题：常用字符编码所占字节数？`utf8` :英文占 1 字节，中文占 3 字节，`unicode`：任何字符都占 2 个字节，`gbk`：英文占 1 字节，中文占 2 字节
+字符流默认采用的是 `Unicode` 编码，我们可以通过构造方法自定义编码。顺便分享一下之前遇到的笔试题：常用字符编码所占字节数？`utf8` : 英文占 1 字节，中文占 3 字节，`unicode`：任何字符都占 2 个字节，`gbk`：英文占 1 字节，中文占 2 字节
 
 #### Reader
 
-`Reader`用于从源头（通常是文件）读取数据（字符信息）到内存中，`java.io.Reader`抽象类是所有字符输入流的父类。
+`Reader` 用于从源头（通常是文件）读取数据（字符信息）到内存中，`java.io.Reader` 抽象类是所有字符输入流的父类。
 
 `Reader` 用于读取文本， `InputStream` 用于读取原始字节。
 
 `Reader` 常用方法：
 
 - `read()` : 从输入流读取一个字符。
-- `read(char[] cbuf)` : 从输入流中读取一些字符，并将它们存储到字符数组 `cbuf`中，等价于 `read(cbuf, 0, cbuf.length)` 。
-- `read(char[] cbuf, int off, int len)`：在`read(char[] cbuf)` 方法的基础上增加了 `off` 参数（偏移量）和 `len` 参数（要读取的最大字符数）。
-- `skip(long n)`：忽略输入流中的 n 个字符 ,返回实际忽略的字符数。
+- `read(char[] cbuf)` : 从输入流中读取一些字符，并将它们存储到字符数组 `cbuf` 中，等价于 `read(cbuf, 0, cbuf.length)` 。
+- `read(char[] cbuf, int off, int len)`：在 `read(char[] cbuf)` 方法的基础上增加了 `off` 参数（偏移量）和 `len` 参数（要读取的最大字符数）。
+- `skip(long n)`：忽略输入流中的 n 个字符 , 返回实际忽略的字符数。
 - `close()` : 关闭输入流并释放相关的系统资源。
 
 `InputStreamReader` 是字节流转换为字符流的桥梁，其子类 `FileReader` 是基于该基础上的封装，可以直接操作字符文件。
@@ -644,19 +646,19 @@ try (FileReader fileReader = new FileReader("input.txt");) {
 
 #### Writer
 
-`Writer`用于将数据（字符信息）写入到目的地（通常是文件），`java.io.Writer`抽象类是所有字符输出流的父类。
+`Writer` 用于将数据（字符信息）写入到目的地（通常是文件），`java.io.Writer` 抽象类是所有字符输出流的父类。
 
 `Writer` 常用方法：
 
 - `write(int c)` : 写入单个字符。
-- `write(char[] cbuf)`：写入字符数组 `cbuf`，等价于`write(cbuf, 0, cbuf.length)`。
-- `write(char[] cbuf, int off, int len)`：在`write(char[] cbuf)` 方法的基础上增加了 `off` 参数（偏移量）和 `len` 参数（要读取的最大字符数）。
+- `write(char[] cbuf)`：写入字符数组 `cbuf`，等价于 `write(cbuf, 0, cbuf.length)`。
+- `write(char[] cbuf, int off, int len)`：在 `write(char[] cbuf)` 方法的基础上增加了 `off` 参数（偏移量）和 `len` 参数（要读取的最大字符数）。
 - `write(String str)`：写入字符串，等价于 `write(str, 0, str.length())` 。
-- `write(String str, int off, int len)`：在`write(String str)` 方法的基础上增加了 `off` 参数（偏移量）和 `len` 参数（要读取的最大字符数）。
+- `write(String str, int off, int len)`：在 `write(String str)` 方法的基础上增加了 `off` 参数（偏移量）和 `len` 参数（要读取的最大字符数）。
 - `append(CharSequence csq)`：将指定的字符序列附加到指定的 `Writer` 对象并返回该 `Writer` 对象。
 - `append(char c)`：将指定的字符附加到指定的 `Writer` 对象并返回该 `Writer` 对象。
 - `flush()`：刷新此输出流并强制写出所有缓冲的输出字符。
-- `close()`:关闭输出流释放相关的系统资源。
+- `close()`: 关闭输出流释放相关的系统资源。
 
 `OutputStreamWriter` 是字符流转换为字节流的桥梁，其子类 `FileWriter` 是基于该基础上的封装，可以直接将字符写入到文件。
 
@@ -683,7 +685,7 @@ try (Writer output = new FileWriter("output.txt")) {
 
 IO 操作是很消耗性能的，缓冲流将数据加载至缓冲区，一次性读取/写入多个字节，从而避免频繁的 IO 操作，提高流的传输效率。
 
-字节缓冲流这里采用了装饰器模式来增强 `InputStream` 和`OutputStream`子类对象的功能。
+字节缓冲流这里采用了装饰器模式来增强 `InputStream` 和 `OutputStream` 子类对象的功能。
 
 举个例子，我们可以通过 `BufferedInputStream`（字节缓冲输入流）来增强 `FileInputStream` 的功能。
 
@@ -698,10 +700,11 @@ BufferedInputStream bufferedInputStream = new BufferedInputStream(new FileInputS
 
 ### 字符缓冲流
 
-`BufferedReader` （字符缓冲输入流）和 `BufferedWriter`（字符缓冲输出流）类似于 `BufferedInputStream`（字节缓冲输入流）和`BufferedOutputStream`（字节缓冲输入流），内部都维护了一个字节数组作为缓冲区。不过，前者主要是用来操作字符信息
+`BufferedReader` （字符缓冲输入流）和 `BufferedWriter`（字符缓冲输出流）类似于 `BufferedInputStream`（字节缓冲输入流）和 `BufferedOutputStream`（字节缓冲输入流），内部都维护了一个字节数组作为缓冲区。不过，前者主要是用来操作字符信息
 
 ### 打印流
 
-`System.out` 实际是用于获取一个 `PrintStream` 对象，`print`方法实际调用的是 `PrintStream` 对象的 `write` 方法。
+`System.out` 实际是用于获取一个 `PrintStream` 对象，`print` 方法实际调用的是 `PrintStream` 对象的 `write` 方法。
 
 `PrintStream` 属于字节打印流，与之对应的是 `PrintWriter` （字符打印流）。`PrintStream` 是 `OutputStream` 的子类，`PrintWriter` 是 `Writer` 的子类。
+
