@@ -287,7 +287,7 @@ InnoDB 行锁是通过对索引数据页上的记录加锁实现的，MySQL Inno
 
 - **记录锁（Record Lock）**：也被称为记录锁，属于单个行记录上的锁。
 - **间隙锁（Gap Lock）**：锁定一个范围，不包括记录本身。
-- **临键锁（Next-Key Lock）**：Record Lock+Gap Lock，锁定一个范围，包含记录本身，主要目的是为了 **解决幻读问题**（MySQL 事务部分提到过）。记录锁只能锁住已经存在的记录 **，为了避免插入新记录，需要依赖间隙锁**。
+- **临键锁（Next-Key Lock）**：Record Lock + Gap Lock，锁定一个范围，包含记录本身，主要目的是为了 **解决幻读问题**（MySQL 事务部分提到过）。记录锁只能锁住已经存在的记录 **，为了避免插入新记录，需要依赖间隙锁**。
 
 在 InnoDB 默认的隔离级别 REPEATABLE-READ 下，行锁默认使用的是 Next-Key Lock。但是，如果操作的索引是唯一索引或主键，InnoDB 会对 Next-Key Lock 进行优化，将其降级为 Record Lock，即仅锁住索引本身，而不是范围。
 
@@ -381,7 +381,7 @@ UPDATE...
 DELETE...
 ```
 
-## MySQL 如何存储 IP 地址？
+## MySQL 存储 IP 地址
 
 可以将 IP 地址转换成整形数据存储，性能更好，占用空间也更小。
 
@@ -393,6 +393,22 @@ MySQL 提供了两个方法来处理 ip 地址
 插入数据前，先用 `INET_ATON()` 把 ip 地址转为整型，显示数据时，使用 `INET_NTOA()` 把整型的 ip 地址转为地址显示即可。
 
 ## MySQL 日志
+
+- 错误日志（error log） ：对 MySQL 的启动、运行、关闭过程进行了记录。
+- 二进制日志（binary log，binlog） ：主要记录的是更改数据库数据的 SQL 语句。
+- 一般查询日志（general query log） ：已建立连接的客户端发送给 MySQL 服务器的所有 SQL 记录，因为 SQL 的量比较大，默认是不开启的，也不建议开启。
+- 慢查询日志（slow query log） ：执行时间超过 long_query_time秒钟的查询，解决 SQL 慢查询问题的时候会用到。
+- 事务日志(redo log 和 undo log) ：redo log 是重做日志，undo log 是回滚日志。
+- 中继日志(relay log) ：relay log 是复制过程中产生的日志，很多方面都跟 binary log 差不多。不过，relay log 针对的是主从复制中的从库。
+- DDL 日志(metadata log) ：DDL 语句执行的元数据操作
+
+### 慢日志
+
+慢查询日志记录了执行时间超过 long_query_time（默认是 10s，通常设置为1s）的所有查询语句，在解决 SQL 慢查询（SQL 执行时间过长）问题的时候经常会用到。
+
+找到慢 SQL 是优化 SQL 语句性能的第一步，然后再用EXPLAIN 命令可以对慢 SQL 进行分析，获取[执行计划](https://javaguide.cn/database/mysql/mysql-query-execution-plan.html)的相关信息。
+
+你可以通过 show variables like "slow_query_log";命令来查看慢查询日志是否开启，默认是关闭的。
 
 ### redo log
 
@@ -517,3 +533,24 @@ MySQL InnoDB 引擎使用 **redo log(重做日志)** 保证事务的 **持久性
 ## MVCC
 
 MVCC(多版本并发控制)，用于在多个并发事务同时读写数据库时保持数据的一致性和隔离性，通过维护多个版本的数据来实现。当一个事务要对数据库中的数据进行修改时，MVCC 会为该事务创建一个数据快照，而不是直接修改实际的数据行。
+
+## Explain
+
+```sql
+explain + select 查询语句
+```
+
+| **列名**      | **含义**                                     |
+| ------------- | -------------------------------------------- |
+| id            | SELECT 查询的序列标识符                      |
+| select_type   | SELECT 关键字对应的查询类型                  |
+| table         | 用到的表名                                   |
+| partitions    | 匹配的分区，对于未分区的表，值为 NULL        |
+| type          | 表的访问方法                                 |
+| possible_keys | 可能用到的索引                               |
+| key           | 实际用到的索引                               |
+| key_len       | 所选索引的长度                               |
+| ref           | 当使用索引等值查询时，与索引作比较的列或常量 |
+| rows          | 预计要读取的行数                             |
+| filtered      | 按表条件过滤后，留存的记录数的百分比         |
+| Extra         | 附加信息                                     |

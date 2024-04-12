@@ -15,6 +15,13 @@
 
 高性能，高并发，功能全面
 
+### Redis vs Memcached(本地内存)
+
+- Redis 支持的数据类型更丰富（String、Hash、List、Set、ZSet），而 Memcached 只支持最简单的 key-value 数据类型；
+- Redis **支持数据的持久化**，可以将内存中的数据保持在磁盘中，重启的时候可以再次加载进行使用，而 Memcached 没有持久化功能，数据全部存在内存之中，Memcached 重启或者挂掉后，数据就没了；
+- Redis **原生支持集群模式**，Memcached 没有原生的集群模式，需要依靠客户端来实现往集群中分片写入数据；
+- Redis 支持发布订阅模型、Lua 脚本、事务等功能，而 Memcached 不支持；
+
 ## 常见的缓存读写策略
 
 ### 旁路缓存模式
