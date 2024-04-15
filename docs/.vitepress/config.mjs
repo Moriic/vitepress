@@ -5,7 +5,7 @@ import AutoSidebar from 'vite-plugin-vitepress-auto-sidebar';
 export default defineConfig({
   vite: {
     plugins: [AutoSidebar({
-      ignoreList: ["assets"],
+      ignoreList: ["assets", "temp"],
       collapsed: true,
     })],
   },
