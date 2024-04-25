@@ -127,40 +127,37 @@ class LRUCache {
 ```
 
 ```java
-class LRUCache2 {
+class LRUCache {
     LinkedHashMap<Integer, Integer> cache = new LinkedHashMap<>();
     int capacity;
 
-    LRUCache2(int capacity) {
+    public LRUCache(int capacity) {
         this.capacity = capacity;
     }
-
-    private void makeRecently(int key) {
-        int val = cache.get(key);
-        cache.remove(key);
-        cache.put(key, val);
-    }
-
+    
     public int get(int key) {
         if (!cache.containsKey(key)) {
             return -1;
         }
-        makeRecently(key);
+        int val = cache.get(key);
+        cache.remove(key);
+        cache.put(key, val);
         return cache.get(key);
     }
-
-    public void put(int key, int val) {
+    
+    public void put(int key, int value) {
+        // 包含key，移除重新插入
         if (cache.containsKey(key)) {
-            cache.put(key, val);
-            makeRecently(key);
+            cache.remove(key);
+            cache.put(key, value);
             return;
         }
-
+		// 超出容量
         if (cache.size() >= capacity) {
             int oldestKey = cache.keySet().iterator().next();
             cache.remove(oldestKey);
         }
-        cache.put(key, val);
+        cache.put(key, value);
     }
 }
 ```

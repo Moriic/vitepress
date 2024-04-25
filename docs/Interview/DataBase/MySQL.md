@@ -20,7 +20,7 @@
 
 - char 更适合存储长度较短或长度差不多的字符串，varchar 适合存储长度不确定或差异大的字符串
 
-### datetime vs timestamp 
+### datetime vs timestamp
 
 - datetime 没有时区信息，timestamp 与时区有关，会根据时区改变时间
 
