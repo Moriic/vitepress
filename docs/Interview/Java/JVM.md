@@ -1,23 +1,11 @@
 # JVM
 
-## 运行时数据区域
+## JDK vs JRE vs JVM
 
-![java-runtime-data-areas-jdk1.8](https://raw.githubusercontent.com/Moriic/picture/main/image/1712551790_0.png)
+- JRE：Java 运行时环境和必要的类库
+- JDK：包含 JRE 及 javac(编译器)，jdb(调试器)
+- JVM：运行字节码的虚拟机
 
-线程私有：
+## JVM 结构
 
-- 程序计数器
-- 虚拟机栈
-- 本地方法栈
-
-线程共享：
-
-- 堆
-- 方法区
-- 直接内存(非运行时数据区的一部分)
-
-## 程序计数器
-
-字节码解释器工作时通过改变这个计数器的值来选取下一条需要执行的字节码指令，分支、循环、跳转、异常处理、线程恢复等功能都需要依赖这个计数器来完成。
-
-另外，为了**线程切换后能恢复到正确的执行位置**，每条线程都需要有一个独立的程序计数器，各线程之间计数器互不影响，独立存储，我们称这类内存区域为“线程私有”的内存。
+<img src="https://raw.githubusercontent.com/Moriic/picture/main/image/1714200206_0.png" alt="image-20240427144325875" style="zoom: 67%;" />
