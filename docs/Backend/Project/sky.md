@@ -1,10 +1,10 @@
-> TODO：AOP，annotation,invoke,JWTUnits,HttpClientUnit
+> TODO：AOP，annotation, invoke, JWTUnits, HttpClientUnit
 
 ## 项目准备
 
 ### 项目结构
 
-| pojo包 | 说明                           |
+| pojo 包 | 说明                           |
 | ------ | ------------------------------ |
 | Entity | 实体，与数据库的表对应         |
 | DTO    | 数据传输对象，接收前端数据对象 |
@@ -12,7 +12,7 @@
 
 ### 完善登录
 
-将数据库的密码进行md5加密，登录时进行加密后再与数据库对比
+将数据库的密码进行 md5 加密，登录时进行加密后再与数据库对比
 
 ```java
 password = DigestUtils.md5DigestAsHex(password.getBytes());
@@ -22,7 +22,7 @@ if (!password.equals(employee.getPassword())) {
 }
 ```
 
-### knife4j生成接口文档
+### knife4j 生成接口文档
 
 ```xml
 <dependency>
@@ -71,9 +71,9 @@ public class WebMvcConfiguration extends WebMvcConfigurationSupport {
 
 | 注解              | 说明                                                   |
 | ----------------- | ------------------------------------------------------ |
-| @Api              | 用在类上，例如Controller                               |
-| @ApiOperation     | 用在方法上，例如Controller的方法，说明方法的用途，作用 |
-| @ApiModel         | 用在类上，例如entity,DTO,VO                            |
+| @Api              | 用在类上，例如 Controller                               |
+| @ApiOperation     | 用在方法上，例如 Controller 的方法，说明方法的用途，作用 |
+| @ApiModel         | 用在类上，例如 entity, DTO, VO                            |
 | @ApiModelProperty | 用在属性上，描述属性信息                               |
 
 ## 新增员工
@@ -105,7 +105,7 @@ public Result exceptionHandler(SQLIntegrityConstraintViolationException ex){
 
 每个线程提供一份存储空间
 
-| ThreadLocal常用方法      | 说明                     |
+| ThreadLocal 常用方法      | 说明                     |
 | ------------------------ | ------------------------ |
 | public void set(T value) | 设置当前线程局部变量的值 |
 | public T get()           | 返回当前线程局部变量的值 |
@@ -129,9 +129,9 @@ public class BaseContext {
 }
 ```
 
-检验令牌时将id存入：`BaseContext.*setCurrentId*(empId);`
+检验令牌时将 id 存入：`BaseContext.*setCurrentId*(empId);`
 
-再server层插入员工时设置id：`employee.setCreateUser(BaseContext.*getCurrentId*());` 
+再 server 层插入员工时设置 id：`employee.setCreateUser(BaseContext.*getCurrentId*());` 
 
 ### 日期格式化
 
@@ -142,9 +142,9 @@ public class BaseContext {
 private LocalDateTime createTime;
 ```
 
-2. 为SpringMVC扩展一个消息转换器
+2. 为 SpringMVC 扩展一个消息转换器
 
- JacksonObjectMapper类
+ JacksonObjectMapper 类
 
 ```java
 /**
@@ -202,7 +202,7 @@ public class WebMvcConfiguration extends WebMvcConfigurationSupport {
 
 ## 启用禁用员工
 
-创建实体类可以使用build，Employee类上添加注解@Build
+创建实体类可以使用 build，Employee 类上添加注解@Build
 
 ```java
 Employee employee = Employee.builder()
@@ -211,11 +211,11 @@ Employee employee = Employee.builder()
         .build();
 ```
 
-update使用动态sql以便后续都可以使用该接口进行更新
+update 使用动态 sql 以便后续都可以使用该接口进行更新
 
 ## 公共字段自动填充(AOP)
 
-1. 自定义注解AutoFill,用于标识需要进行公共字段自动填充的方法
+1. 自定义注解 AutoFill, 用于标识需要进行公共字段自动填充的方法
 
 ```java
 // 自定义注解
@@ -227,7 +227,7 @@ public @interface AutoFill {
 }
 ```
 
-2. 自定义切面类AutoFillAspect,统一拦截加入了AutoFill注解的方法，通过反射为公共字段赋值
+2. 自定义切面类 AutoFillAspect, 统一拦截加入了 AutoFill 注解的方法，通过反射为公共字段赋值
 
 ```java
 @Aspect
@@ -284,7 +284,7 @@ public class AutoFillAspect {
 }
 ```
 
-3. 在Mapper方法上加入AutoFill注解
+3. 在 Mapper 方法上加入 AutoFill 注解
 
 ```java
 @AutoFill(value = OperationType.UPDATE)
@@ -306,7 +306,7 @@ void insert(Category category);
 ## 新增菜品
 
 1. 开启事务：`@Transactional`
-2. 插入时返回id属性
+2. 插入时返回 id 属性
 
 ```xml
 <insert id="insert" useGeneratedKeys="true" keyProperty="id">
@@ -317,11 +317,11 @@ void insert(Category category);
 @Options(useGeneratedKeys = true, keyProperty = "id", keyColumn = "id")
 ```
 
-3. `@RequestParam List<Long> ids`可以用来接收ids = 1,2,3
+3. `@RequestParam List<Long> ids` 可以用来接收 ids = 1,2,3
 
 ## HttpClient
 
-json发送http请求
+json 发送 http 请求
 
 ```java
 
@@ -381,7 +381,7 @@ public class HttpClientTest {
 
 ## Redis
 
-### Redis缓存菜品
+### Redis 缓存菜品
 
 ```java
 public Result<List<DishVO>> list(Long categoryId) {
@@ -430,13 +430,13 @@ private void cleanCache(String pattern){
 参数说明：
 
 1. 添加缓存 `@Cacheable(cacheNames = "setmealCache",key = "#categoryId")`
-2. 删除指定id `@CacheEvict(cacheNames = "setmealCache",key = "#setmealDTO.categoryId")`
+2. 删除指定 id `@CacheEvict(cacheNames = "setmealCache",key = "#setmealDTO.categoryId")`
 3. 删除所有 `@CacheEvict(cacheNames = "setmealCache",allEntries = true)`
-4. 生成的key 为 cacheNames::key
+4. 生成的 key 为 cacheNames:: key
 
-## JWT令牌
+## JWT 令牌
 
-配置jwt所需信息及配置类
+配置 jwt 所需信息及配置类
 
 ```yml
 sky:
@@ -464,7 +464,7 @@ public class JwtProperties {
 }
 ```
 
-配置JWT工具类加密和解密 jwtUnit
+配置 JWT 工具类加密和解密 jwtUnit
 
 ```java
 public class JwtUtil {
@@ -517,7 +517,7 @@ public class JwtUtil {
 }
 ```
 
-获取token
+获取 token
 
 ```java
 //登录成功后，生成jwt令牌
@@ -529,7 +529,7 @@ String token = JwtUtil.createJWT(
         claims);
 ```
 
-以后每次都会携带token来进行验证，通过拦截器实现
+以后每次都会携带 token 来进行验证，通过拦截器实现
 
 ```java
 @Component
@@ -591,12 +591,12 @@ public class BaseContext {
 
 ## Spring Task
 
-spring task是spring提供的定时任务框架
+spring task 是 spring 提供的定时任务框架
 
-### cron表达式
+### cron 表达式
 
 - 一个字符串，用来定义任务触发的时间
-- 构成规则：分为6或7个域，由空格分开，每个域分别为：秒 分钟 小时 日 月 周 年(可选)
+- 构成规则：分为 6 或 7 个域，由空格分开，每个域分别为：秒 分钟 小时 日 月 周 年(可选)
 
 > https://cron.qqe2.com/
 
@@ -616,7 +616,7 @@ public class MyTask{
 
 ## WebSocket
 
-WebSocket是基于TCP的一种新的**网络协议**，实现了浏览器和服务器的**全双工通信**，一次握手，创建持久性的连接，并进行**双向数据通信**。
+WebSocket 是基于 TCP 的一种新的 **网络协议**，实现了浏览器和服务器的 **全双工通信**，一次握手，创建持久性的连接，并进行 **双向数据通信**。
 
 应用场景：视频弹幕，网页聊天，实时更新
 
@@ -629,7 +629,7 @@ WebSocket是基于TCP的一种新的**网络协议**，实现了浏览器和服�
 </dependency>
 ```
 
-#### WebSocket配置类
+#### WebSocket 配置类
 
 ```java
 /**
@@ -644,7 +644,7 @@ public class WebSocketConfiguration {
 }
 ```
 
-#### WebSocket操作类
+#### WebSocket 操作类
 
 ```java
 @Component
@@ -855,7 +855,7 @@ public SalesTop10ReportVO getSalesTop10(LocalDate begin, LocalDate end) {
 
 ## Apache POI
 
-使用java对excel进行操作
+使用 java 对 excel 进行操作
 
 ### 使用
 
