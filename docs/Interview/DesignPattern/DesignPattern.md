@@ -30,7 +30,7 @@ public class Singleton {
     private Singleton() {}
     
     public static  Singleton newInstance() {
-        return ourInstance;
+        return instance;
     }
 }
 ```
@@ -45,7 +45,11 @@ public class Singleton {
 
 ```java
 public enum Singleton{
-	instance;
+	INSTANCE;
+    
+    public Singleton getInstance(){
+        return INSTANCE;
+    }
 }
 ```
 

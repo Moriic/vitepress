@@ -303,3 +303,36 @@ CMS 关注系统的暂停时间，允许用户线程和回收线程同时执行�
 
 - 优点：同时执行，用户体验好
 - 缺点：内存碎片，浮动垃圾(并发时产生的垃圾)
+
+#### 年轻代-PS / 老年代-PO
+
+Parallel Scavenge 是 JDK8 默认的年轻代垃圾回收器，多线程并行回收，关注的是系统的吞吐量。具备自动调整堆内存大小的特点。
+
+#### G1 垃圾回收器
+
+1. 支持巨大的堆空间回收，并有较高的吞吐量
+
+2. 支持多 CPU 并行垃圾回收
+
+3. 允许用户设置最大暂停时间
+
+G1 的整个堆会被划分成多个大小相等的区域，称之为区 Region，区域不要求是连续的。分为 Eden、Survivor、Old 区。Region 的大小通过堆空间大小/2048 计算得到，也可以通过参数-XX: G1HeapRegionSize = 32m 指定(其民中 32m 指定 region 大小为 32M)，Region size 必须是 2 的指数幂，取值范围从 1M 到 32M。
+
+<img src="https://raw.githubusercontent.com/Moriic/picture/main/image/1714833683_0.png" alt="image-20240504224123392" style="zoom:50%;" />
+
+年轻代回收（Young GC）：回收 Eden 区和 Survivor 区中不用的对象。会导致 STW，G1 中可以通过参数-XX: MaxGCPauseMillis = n（默认 200）设置每次垃圾回收时的最大暂停时间毫秒数，G1 垃圾回收器会尽可能地保证暂停时间。
+
+1. 新创建的对象会存放在 Eden 区。当 G1 判断年轻代区不足（max 默认 60%），无法分配对象时需要回收时会执行 Young GC.
+2. 标记出 Eden 和 Survivor 区域中的存活对象
+3. 根据配置的最大暂停时间选择某些区域将存活对象复制到一个新的 Survivor 区中（年龄+1），清空这些区域。
+4. G1 在进行 YoungGC 的过程中会去记录每次垃圾回收时每个 Eden 区和 Survivor 区的平均耗时，以作为下次回收时的参考依据。这样就可以根据配置的最大暂停时间计算出本次回收时最多能回收多少个 Region 区域了。比如-XX: MaxGCPauseMillis = n（默认 200），每个 Region 回收耗时 40ms，那么这次回收最多只能回收 4 个 Region。
+5. 后续 YoungGC 时与之前相同，只不过 Survivor 区中存活对象会被搬运到另一个 Survivor 区。
+6. 当某个存活对象的年龄到达阈值（默认 15），将被放入老年代。
+7. 部分对象如果大小超过 Region 的一半，会直接放入老年代，这类老年代被称为 Humongous 区。比如堆内存是 4G，每个 Region 是 2M，只要一个大对象超过了 1M 就被放入 Humongous 区，如果对象过大会横跨多个 Region。
+8. 多次回收之后，会出现很多 Old 老年代区，此时总堆占有率达到阈值时（-XX: InitiatingHeap0ccupancyPercent 默认 45%）会触发混合回收 MixedGC。回收所有年轻代和部分老年代的对象以及大对象区。采用复制算法来完成。
+
+混合回收
+
+混合回收分为：初始标记（initial mark）、并发标记（concurrent mark）、最终标记（remark或者FinalizeMarking）、并发清理(cleanup)
+
+G1对老年代的清理会选择存活度最低的区域来进行回收，这样可以保证回收效率最高，这也是G1（Garbagefirst）名称的由来。
