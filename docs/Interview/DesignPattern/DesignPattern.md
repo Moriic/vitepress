@@ -12,6 +12,26 @@
 | 合成复用原则 | 在一个新的对象里面使用一些已有的对象，使之称为新对象的一部分 | 尽量使用合成(委派型对象)，而不是使用继承                     |
 | 最少知识原则 | 模块相对独立，易修改                                         |                                                              |
 
+## 分类
+
+### 创建型模式
+
+这类模式提供创建对象的机制，能够提升已有代码的灵活性和可复⽤性。
+
+<img src="https://raw.githubusercontent.com/Moriic/picture/main/image/1715494753_0.png" alt="image-20240512141912985" style="zoom:50%;" />
+
+### 结构性模式
+
+这类模式介绍如何将对象和类组装成较⼤的结构，并同时保持结构的灵活和⾼效。
+
+<img src="https://raw.githubusercontent.com/Moriic/picture/main/image/1715494779_0.png" alt="image-20240512141939084" style="zoom:50%;" />
+
+### 行为模式
+
+这类模式负责对象间的⾼效沟通和职责委派。
+
+![image-20240512144546296](https://raw.githubusercontent.com/Moriic/picture/main/image/1715496346_0.png)
+
 ## 单例模式
 
 <img src="https://raw.githubusercontent.com/Moriic/picture/main/image/1714137286_0.webp" alt="944365-9981462dbf695c86" style="zoom: 50%;" />
@@ -91,7 +111,7 @@ public static synchronized Singleton getInstance(){
 
 ```java
 public class Singleton{
-	private static Singleton instance;
+	private volatile static Singleton instance;
 	
 	public static Singleton getInstance(){
 		if(instance == null){
@@ -189,7 +209,7 @@ abstract class Factory{
 }
 ```
 
-**步骤 2：** 创建 **抽象产品类** ，定义具体产品的公共接口；
+**步骤 2：** 创建 **抽象产品类**，定义具体产品的公共接口；
 
 ```csharp
 abstract class Product{
