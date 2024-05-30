@@ -173,7 +173,7 @@ PC 寄存器，记录下一条指令的地址，线程不共享，保证线程�
 - 运行时常量池（Runtime Constant Pool）是方法区的一部分。Class 文件中除了有类的版本/字段/方法/接口等描述信息外，还有一项信息是常量池（Constant Pool Table），用于存放编译期生成的各种字面量和符号引用，这部分内容将类在加载后进入方法区的运行时常量池中存放。运行期间也可能将新的常量放入池中，这种特性被开发人员利用得比较多的是 `String.intern()` 方法。受方法区内存的限制，当常量池无法再申请到内存时会抛出 `OutOfMemoryError` 异常。
 - JDK7-永久代(堆中，-XX: MaxPermSize =?)，JDK8-元空间(操作系统直接内存，-XX: MaxMetaspaceSize =?)
 
-## 垃圾回收器
+## 垃圾回收
 
 ### 方法区的回收
 
@@ -277,22 +277,26 @@ GC Root 对象：
 
 > -XX:+UseSerialGC，新生代，老年代都使用串行回收器
 
-一种单线程串行回收年轻代的垃圾回收器，复制算法
+一种 **单线程串行回收年轻代** 的垃圾回收器，**复制算法**
 
-- 优点：当 CPU 处理器吞吐量出色
+- 优点：单 CPU 处理器吞吐量出色
 
 - 缺点：多 CPU 吞吐量不如其他垃圾回收器，堆偏大会导致 STW 时间过长
 
-#### 年轻代-ParNew / 老年代-CMS 垃圾回收器
+#### 年轻代-ParNew
 
-ParNew 使用多线程进行垃圾回收
+ParNew 使用 **多线程进行垃圾回收**
 
 <img src="https://raw.githubusercontent.com/Moriic/picture/main/image/1714830171_0.png" alt="image-20240504214250930" style="zoom:67%;" />
 
 - 优点：多 CPU 处理器停顿时间短
 - 缺点：吞吐量和停顿时间不如 G1 回收器
 
-CMS 关注系统的暂停时间，允许用户线程和回收线程同时执行，标记-清除算法，内存碎片会在 Full GC 处理
+> -XX:+UserParNewGC 新生代使用 ParNew 回收器，老年代使用串行回收器
+
+#### 老年代-CMS 垃圾回收器
+
+CMS **关注系统的暂停时间，允许用户线程和回收线程同时执行，标记-清除算法**，内存碎片会在 Full GC 处理，会导致用户现场的暂停
 
 <img src="https://raw.githubusercontent.com/Moriic/picture/main/image/1714830228_0.png" alt="image-20240504214348467" style="zoom:50%;" />
 
@@ -302,13 +306,34 @@ CMS 关注系统的暂停时间，允许用户线程和回收线程同时执行�
 4. **并发清理**：清理未标记的对象
 
 - 优点：同时执行，用户体验好
-- 缺点：内存碎片，浮动垃圾(并发时产生的垃圾)
+- 缺点：内存碎片，**浮动垃圾(并发时产生的垃圾)**
+- 如果老年代内存不足分配对象，CMS 会退化成 Serial Old 回收老年代
+
+> -XX:+UseConcMarkSweepGC 新生代使用 ParNew，老年代使用 CMS
 
 #### 年轻代-PS / 老年代-PO
 
-Parallel Scavenge 是 JDK8 默认的年轻代垃圾回收器，多线程并行回收，关注的是系统的吞吐量。具备自动调整堆内存大小的特点。
+Parallel Scavenge 是 JDK8 **默认的年轻代垃圾回收器**，**多线程并行回收，关注的是系统的吞吐量**。具备 **自动调整堆内存大小** 的特点。复制算法
+
+- 优点：吞吐量高，手动可控，动态调整堆的参数
+- 缺点：STW
+
+Parallel Old 老年代多线程并发收集，**标记整理算法**
+
+- 优点：多核并发高
+- 缺点：STW
+
+> -XX: UseParallelGC 或 -XX: UseParallelOldGC 使用 PS/PO 组合
+>
+> -XX: MaxGCPauseMillis = n，设置最大停顿时间，
+>
+> -XX: GCTimeRatio = n，设置吞吐量为 n（用户线程执行时间 = n/n + 1）
+>
+> -XX: UseAdaptiveSizePolicy，设置自动调整堆大小
 
 #### G1 垃圾回收器
+
+JDK9 后默认垃圾回收器
 
 1. 支持巨大的堆空间回收，并有较高的吞吐量
 
@@ -316,23 +341,57 @@ Parallel Scavenge 是 JDK8 默认的年轻代垃圾回收器，多线程并行�
 
 3. 允许用户设置最大暂停时间
 
-G1 的整个堆会被划分成多个大小相等的区域，称之为区 Region，区域不要求是连续的。分为 Eden、Survivor、Old 区。Region 的大小通过堆空间大小/2048 计算得到，也可以通过参数-XX: G1HeapRegionSize = 32m 指定(其民中 32m 指定 region 大小为 32M)，Region size 必须是 2 的指数幂，取值范围从 1M 到 32M。
+G1 的整个堆会被划分成多个大小相等的区域，称之为区 Region，区域不要求是连续的。分为 Eden、Survivor、Old 区。Region 的大小通过堆空间大小/2048 计算得到，也可以通过参数-XX: G1HeapRegionSize = 32m 指定(其中 32m 指定 region 大小为 32M)，Region size 必须是 2 的指数幂，取值范围从 1M 到 32M。
 
 <img src="https://raw.githubusercontent.com/Moriic/picture/main/image/1714833683_0.png" alt="image-20240504224123392" style="zoom:50%;" />
 
-年轻代回收（Young GC）：回收 Eden 区和 Survivor 区中不用的对象。会导致 STW，G1 中可以通过参数-XX: MaxGCPauseMillis = n（默认 200）设置每次垃圾回收时的最大暂停时间毫秒数，G1 垃圾回收器会尽可能地保证暂停时间。
+**年轻代回收（Young GC）：回收 Eden 区和 Survivor 区中不用的对象。** 会导致 STW，G1 中可以通过参数-XX: MaxGCPauseMillis = n（默认 200）设置每次垃圾回收时的最大暂停时间毫秒数，G1 垃圾回收器会尽可能地保证暂停时间。
 
 1. 新创建的对象会存放在 Eden 区。当 G1 判断年轻代区不足（max 默认 60%），无法分配对象时需要回收时会执行 Young GC.
-2. 标记出 Eden 和 Survivor 区域中的存活对象
-3. 根据配置的最大暂停时间选择某些区域将存活对象复制到一个新的 Survivor 区中（年龄+1），清空这些区域。
-4. G1 在进行 YoungGC 的过程中会去记录每次垃圾回收时每个 Eden 区和 Survivor 区的平均耗时，以作为下次回收时的参考依据。这样就可以根据配置的最大暂停时间计算出本次回收时最多能回收多少个 Region 区域了。比如-XX: MaxGCPauseMillis = n（默认 200），每个 Region 回收耗时 40ms，那么这次回收最多只能回收 4 个 Region。
+2. **标记出 Eden 和 Survivor 区域中的存活对象**
+3. 根据配置的最大暂停时间选择某些区域 **将存活对象复制到一个新的 Survivor 区中（年龄+1），清空这些区域**。
+4. G1 在进行 YoungGC 的过程中会去记录每次垃圾回收时每个 Eden 区和 Survivor 区的平均耗时，以作为下次回收时的参考依据。这样就可以 **根据配置的最大暂停时间计算出本次回收时最多能回收多少个 Region 区域** 了。比如-XX: MaxGCPauseMillis = n（默认 200），每个 Region 回收耗时 40ms，那么这次回收最多只能回收 4 个 Region。
 5. 后续 YoungGC 时与之前相同，只不过 Survivor 区中存活对象会被搬运到另一个 Survivor 区。
-6. 当某个存活对象的年龄到达阈值（默认 15），将被放入老年代。
-7. 部分对象如果大小超过 Region 的一半，会直接放入老年代，这类老年代被称为 Humongous 区。比如堆内存是 4G，每个 Region 是 2M，只要一个大对象超过了 1M 就被放入 Humongous 区，如果对象过大会横跨多个 Region。
-8. 多次回收之后，会出现很多 Old 老年代区，此时总堆占有率达到阈值时（-XX: InitiatingHeap0ccupancyPercent 默认 45%）会触发混合回收 MixedGC。回收所有年轻代和部分老年代的对象以及大对象区。采用复制算法来完成。
+6. 当某个 **存活对象的年龄到达阈值（默认 15），将被放入老年代**。
+7. **部分对象如果大小超过 Region 的一半**，会直接放入老年代，这类老年代被称为 Humongous 区。比如堆内存是 4G，每个 Region 是 2M，只要一个大对象超过了 1M 就被放入 Humongous 区，如果对象过大会横跨多个 Region。
+8. 多次回收之后，会出现很多 Old 老年代区，此时总堆占有率达到阈值时（-XX: InitiatingHeap0ccupancyPercent 默认 45%）会触发 **混合回收 MixedGC**。回收所有年轻代和部分老年代的对象以及大对象区。采用复制算法来完成。
 
-混合回收
+**混合回收(MixedGC)：**
 
-混合回收分为：初始标记（initial mark）、并发标记（concurrent mark）、最终标记（remark或者FinalizeMarking）、并发清理(cleanup)
+混合回收分为：初始标记（initial mark）、并发标记（concurrent mark）、最终标记（remark 或者 FinalizeMarking）、并发清理(cleanup) **复制算法**
 
-G1对老年代的清理会选择存活度最低的区域来进行回收，这样可以保证回收效率最高，这也是G1（Garbagefirst）名称的由来。
+G1 对 **老年代的清理** 会 **选择存活度最低的区域来进行回收**，这样可以保证回收效率最高，这也是 G1（Garbagefirst）名称的由来。
+
+<img src="https://raw.githubusercontent.com/Moriic/picture/main/image/1715865548_0.png" alt="image-20240516211906533" style="zoom:50%;" />
+
+<img src="https://raw.githubusercontent.com/Moriic/picture/main/image/1715865654_0.png" alt="image-20240516212054048" style="zoom:50%;" />
+
+如果清理过程中发现没有足够的空 Region 存放转移的对象，会出现 FullGC。单线程执行标记-整理算法，此时会导致用户线程的暂停。所以尽量保证应该用的堆内存有一定多余的空间。
+
+> -XX:+UseG1GC，打开 G1   -XX: MaxGCPauseMills，最大暂停时间
+
+优点：对比较大的堆如超过 6G 的堆回收时，延迟可控，不会产生垃圾碎片，并发标记的 SATB 算法效率高
+
+## 实战
+
+### 基础概念
+
+**内存泄漏**：在 Java 中如果不再使用一个对象，但是该对象仍在 GC ROOT 的引用链上，这个对象就不会被垃圾回收器回收
+
+**内存溢出**：是指程序在申请内存时，没有足够的内存空间供其使用，出现 out of memory
+
+### 排查问题
+
+- **top 命令**：查看内存信息 RES(常驻内存)，SHA(共享内存)，MEM(内存占用)，默认按 CPU 排序，按下 M 后按 MEM 排序
+- **jvisualvm**：java 自带可视化
+- **Arthas**：tunnel 隧道服务管理所有需要监控的程序
+
+### 内存泄漏原因
+
+1. 不正确的 equals()和 hashCode()：Map 同一对象映射到不同地方，导致存在多个对象无法垃圾回收
+2. 内部类引用外部类
+3. ThreadLocal 的使用：使用创建线程不会内存泄漏，使用线程池不 remove 会内存泄漏
+4. String 的 intern 方法：JDK6 中字符串常量池放在永久代中，JDK放在堆中，保存大量字符串并被引用无法回收会内存溢出
+5. 通过静态字段保存对象
+6. 资源没有正常关闭
+
