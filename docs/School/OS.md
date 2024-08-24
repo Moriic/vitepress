@@ -142,7 +142,7 @@ PCB 信息：
 
 进程同步：
 
-- 信号量实现进程互斥：semphore mutex = 1, P1(){P(mutex) … V(mutex)}, P2(){P(mutex) … V(mutex)}
+- 信号量实现进程互斥：semphore mutex = 1, P1(){P(mutex) ~ V(mutex)}, P2(){P(mutex) ~ V(mutex)}
 - 信号量实现进程同步：前 V 后 P
 
 <img src="https://raw.githubusercontent.com/Moriic/picture/main/image/1719737256_0.png" alt="image-20240630164736431" style="zoom:50%;" />
