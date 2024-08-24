@@ -36,9 +36,9 @@ jobs:
       - name: 发布到 github-page
         uses: peaceiris/actions-gh-pages@v3
         with:
-          github_token: ${{ secrets.RAN_ACTIONS_TOKEN }} // 配置在项目里的secrets
+          github_token: ${{ secrets.VITEPRESS_TOKEN }} // 配置在项目里的secrets
           exclude_assets: ''
-          publish_dir: packages/docs/.vitepress/dist // 需要发布内容的路径
+          publish_dir: docs/.vitepress/dist // 需要发布内容的路径
 
       # 上传到服务器
       - name: 发布到服务器
