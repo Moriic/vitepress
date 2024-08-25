@@ -1,0 +1,1 @@
+import{_ as s,c as n,o as a,a4 as p}from"./chunks/framework.DpC1ZpOZ.js";const g=JSON.parse('{"title":"CICD","description":"","frontmatter":{},"headers":[],"relativePath":"Deploy/CICD.md","filePath":"Deploy/CICD.md"}'),e={name:"Deploy/CICD.md"},i=p("",8),l=[i];function t(c,o,h,d,r,u){return a(),n("div",null,l)}const _=s(e,[["render",t]]);export{g as __pageData,_ as default};
