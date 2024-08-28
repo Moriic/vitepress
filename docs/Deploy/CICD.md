@@ -2,7 +2,7 @@
 
 ## GithubAction
 
-### VitePress 自动化部署
+### VitePress 自动化部署1
 
 ```
 name: Sync Blog
