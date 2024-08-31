@@ -211,3 +211,10 @@ networks:
 - down：停止并移除所有容器，网络
 - ps/logs/stop/start/restart/top/exec
 
+
+
+## 常用命令
+
+- 删除退出容器：`docker rm $(docker ps -q -f status=exited)`
+
+-  删除未使用的镜像：`docker image prune -a`

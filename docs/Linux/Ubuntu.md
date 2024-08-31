@@ -65,6 +65,7 @@ sudo passwd root
 sudo vim /etc/ssh/sshd_config
 
 PermitRootLogin yes
+PasswordAuthentication yes
 ```
 
 ```bash
