@@ -286,7 +286,7 @@ default-character-set=utf8mb4
 
 ## 前端部署
 
-### VitePress 自动化部署
+### VitePress 自动化部署1
 
 ```yaml
 name: Sync Blog
@@ -360,6 +360,7 @@ ssh-keygen -m PEM -t rsa -b 4096
 ```shell
 cat ~/.ssh/id_rsa
 ```
+<<<<<<< HEAD
 
 ### 配置 Nginx
 
