@@ -218,3 +218,42 @@ networks:
 - 删除退出容器：`docker rm $(docker ps -q -f status=exited)`
 
 -  删除未使用的镜像：`docker image prune -a`
+
+## 配置 TCP 连接
+
+```bash
+vim /usr/lib/systemd/system/docker.service
+
+[Service]
+ExecStart=
+ExecStart=/usr/bin/dockerd -H tcp://0.0.0.0:2375 -H unix://var/run/docker.sock
+
+systemctl daemon-reload
+systemctl restart docker
+```
+
+## Docker 两个容器数据共享
+
+要实现两个容器共享数据，可以通过以下步骤进行操作：
+
+### 1. 创建一个命名的 Docker Volume
+
+首先，使用 Docker 命令创建一个命名的 Volume。这样你可以在多个容器之间共享数据。
+
+```shell
+docker volume create my-shared-volume
+```
+
+其中 `my-shared-volume` 是你创建的 Volume 的名称。
+
+### 2. 使用 Docker CLI 创建并挂载 Volume 的容器
+
+假设你要创建两个容器 `container1` 和 `container2`，并将 `my-shared-volume` 挂载到两个容器中。
+
+```shell
+docker run -d --name container1 -v my-shared-volume:/app busybox
+docker run -d --name container2 -v my-shared-volume:/app busybox
+```
+
+在这两个命令中，`/app` 是挂载到容器内的目录路径，你可以根据需求进行修改。
+
