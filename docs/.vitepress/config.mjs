@@ -17,7 +17,8 @@ export default defineConfig({
       { text: 'Home', link: '/' },
       { text: 'Interview', link: '/Interview/ComputerBasics/Network' },
       { text: 'Backend', link: '/Backend/index' },
-      { text: 'Linux', link: '/Linux/Linux' }
+      { text: 'Linux', link: '/Linux/Linux' },
+      { text: 'Deploy', link: 'Deploy/CICD'}
     ],
     sidebar: [
       {
