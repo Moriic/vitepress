@@ -16,5 +16,7 @@ hero:
 features:
   - title: Onedrive
     link: https://chenwc-my.sharepoint.com/:f:/g/personal/cwc_cwcn_eu_org/Et23xhafbvFDswjLY_3QIv8B4bpsZxybm4Qsi_tbWVSndQ?e=eoo2za
+  - title: COJ System
+    link: http://coj.cwcn.xyz
 ---
 
