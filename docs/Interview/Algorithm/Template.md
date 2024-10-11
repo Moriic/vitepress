@@ -496,7 +496,7 @@ public List<List<Integer>> combinationSum2(int[] candidates, int target) {
 
 ### 排列问题
 
-- 对于排列问题，需要从 0 开始，并且添加判断
+- 对于排列问题，需要从 0 开始，并且添加判断 vis
 - 若需要去重(数组存在重复元素)，需要先排序数组，在回溯时添加判断 i > 0 && nums [i] == nums [i - 1] && ! visited [i - 1]，如果前一个“相同元素”未被使用过，则不使用当前元素。例如 [1 2 2'] 可能出现 [1 2 2'] 和 [1 2' 2] 的情况 如果“存在前一个相同元素” 且“未被使用过”, 当现有排列是 [1 2'] 时，原来的数组 [1 2 2'] 中 2’存在前一个元素 2 与其相同，且此时 2 未被访问过，跳过。[1 2 2'] 的排列先于 [1 2' 2] 存在，因此可以去除。
 
 ```java
@@ -538,7 +538,7 @@ public void backTrack(int[] nums, int cnt) {
 ### 子集问题(类似组合问题)
 
 - 子集问题不需要选择完所有元素，因此每次回溯都会添加到结果集中
-- 如需要去重，与组合问题一样添加判断 i > start && nums[i] == nums[i - 1]
+- 如需要去重，与组合问题一样添加判断 i > start && nums [i] == nums [i - 1]
 
 ```java
 List<Integer> path = new ArrayList<>();
@@ -562,6 +562,129 @@ public void backTrack(int[] nums, int start) {
         backTrack(nums, i + 1);
         path.remove(path.size() - 1);
     }
+}
+```
+
+## 背包问题(动态规划)
+
+### 01 背包
+
+```java
+public int bag01(int[] weight, int[] value, int bagWeight) {
+    int[][] dp = new int[weight.length][bagWeight + 1];
+    for (int j = weight[0]; j <= bagWeight; j++) {
+        dp[0][j] = value[0];
+    }
+    for (int i = 1; i < weight.length; i++) {
+        for (int j = 0; j <= bagWeight; j++) {
+            // 无法选
+            if (weight[i] > j) {
+                dp[i][j] = dp[i - 1][j];
+            } else {
+                // 选和不选的最大值
+                dp[i][j] = Math.max(value[i] + dp[i - 1][j - weight[i]], dp[i - 1][j]);
+            }
+        }
+    }
+    return dp[weight.length - 1][bagWeight];
+}
+```
+
+滚动数组：01 背包反向遍历
+
+```java
+public int bag01(int[] weight, int[] value, int bagWeight) {
+    int[] dp = new int[bagWeight + 1];
+    for (int i = 0; i < weight.length; i++) {
+        for (int j = bagWeight; j >= weight[i]; j--) {
+            dp[j] = Math.max(dp[j], dp[j - weight[i]] + value[i]);
+        }
+    }
+    return dp[bagWeight];
+}
+```
+
+### 完全背包
+
+```java
+public int bagAll(int[] weight, int[] value, int bagWeight) {
+    int[] dp = new int[bagWeight + 1];
+    for (int i = 0; i < weight.length; i++) {
+        for (int j = weight[i]; j <= bagWeight; j++) {
+            dp[j] = Math.max(dp[j], dp[j - weight[i]] + value[i]);
+        }
+    }
+    return dp[bagWeight];
+}
+```
+
+## 组合排列问题(动态规划)
+
+- 对于组合排列若只需求一个数(方案数，目标和)，无需求路径，则可以使用动态规划解决
+- **如果求组合数就是外层 for 循环遍历物品，内层 for 遍历背包**
+- **如果求排列数就是外层 for 遍历背包，内层 for 循环遍历物品**
+- 若只能选一次(01 背包)，则反向遍历，可重复(完全背包)，则正向遍历
+
+### 组合问题
+
+#### P494 目标和
+
+```java
+public int findTargetSumWays(int[] nums, int target) {
+    int sum = Arrays.stream(nums).sum();
+    sum -= Math.abs(target);
+    if (sum < 0 || sum % 2 != 0) {
+        return 0;
+    }
+    sum /= 2;
+
+    int[] dp = new int[sum + 1];
+    dp[0] = 1;
+    // 组合问题：先遍历物品，再遍历背包
+    for (int num : nums) {
+    	// 单一背包：反向遍历
+        for (int j = sum; j >= num; j--) {
+            dp[j] = dp[j] + dp[j - num];
+        }
+    }
+    return dp[sum];
+}
+```
+
+#### P518 零钱总换 II
+
+```java
+public int change(int amount, int[] coins) {
+    int[] dp = new int[amount + 1];
+    dp[0] = 1;
+    // 组合问题：先遍历物品，再遍历背包
+    for (int coin : coins) {
+        // 完全背包：正向遍历
+        for (int j = coin; j <= amount; j++) {
+            dp[j] += dp[j - coin];
+        }
+    }
+    return dp[amount];
+}
+```
+
+### 排列问题
+
+#### P377 组合总和 IV
+
+```java
+public int combinationSum4(int[] nums, int target) {
+    int[] dp = new int[target + 1];
+    dp[0] = 1;
+    // 排列问题：先遍历背包，再遍历物品
+    for (int i = 0; i <= target; i++) {
+        for (int num : nums) {
+            if (i >= num) {
+                dp[i] += dp[i - num];
+            }
+        }
+    }
+    return dp[target];
 }
 ```
 
