@@ -51,6 +51,7 @@ public int binarySearch(int[] nums, int target) {
     return -1;
 }
 
+// 找到 target 的左边界，找不到返回第一个比他大的数
 public int leftBinarySearch(int[] nums, int target) {
     int left = 0, right = nums.length - 1;
     while (left <= right) {
@@ -68,6 +69,7 @@ public int leftBinarySearch(int[] nums, int target) {
     return nums[left] == target ? left : -1;
 }
 
+// 找到 target 的有边界，找不到返回最后一个比他小的数
 public int rightBinarySearch(int[] nums, int target) {
     int left = 0, right = nums.length - 1;
     while (left <= right) {

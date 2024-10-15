@@ -4,7 +4,7 @@
 
 ### 笔试
 
-公众号 万诺coding 有
+公众号 万诺 coding 有
 
 ### 技术面
 
@@ -91,7 +91,7 @@ public class Demo {
 
 背下核心价值观：以客户为中心，以奋斗者为本
 
-作息时间：最好比上班时间早，8.30上班
+作息时间：最好比上班时间早，8.30 上班
 
 ## 微众
 
@@ -159,4 +159,186 @@ WeChatPayUtil2.jsapi(
 
 优化：很多逻辑都是串行执行的，目前数据量比较小，后续在数据量比较大的时候可能需要进行优化
 
+
+
+## 秋招准备
+
+### 复习笔试
+
+题目三：找到内聚值最大的微服务群组
+
+我们将形成 1 个环的多个微服务称为微服务群组，一个微服务群组的所有微服务数量为 L，能够访问到该微服务群组的微服务数量为 V, 这个微服务群组的内聚值 H = L - V.
+
+已知提供的数据中有 1 个或多个微服务群组，请按照内聚值 H 的结果从大到小的顺序对所有微服务群组(（H 相等时，取环中最大的数进行比较)排序，输出排在第一的做服务群组，输出时每个微服务群组输出的起始编号为环中最小的数。
+
+```java
+import java.util.*;
+
+public class C {
+    class Node implements Comparable<Node> {
+        public List<Integer> path = new ArrayList<>();  // 该环路径
+        public int H;                                   // 内聚值
+        public int maxNo;                               // 最大节点编号
+        public int minNo;
+
+        @Override
+        public int compareTo(Node o) {
+            if (!(this.H == o.H))
+                return o.H - this.H;
+            return o.maxNo - this.maxNo;
+        }
+    }
+
+    class Solution {
+        int n;
+        int[] edges;
+        // 存储入度
+        int[] in;
+        // 存储每个节点的子节点数目
+        int[] nums;
+
+
+        public void build() {
+            Scanner sc = new Scanner(System.in);
+            n = sc.nextInt();
+            edges = new int[n];
+            in = new int[n];
+            nums = new int[n];
+            for (int i = 0; i < n; i++) {
+                edges[i] = sc.nextInt();
+                in[edges[i]]++;
+            }
+        }
+
+        public void solution() {
+            // 构建图
+            build();
+            // 拓扑排序
+            Queue<Integer> q = new LinkedList<>();
+            for (int i = 0; i < n; i++) {
+                if (in[i] == 0)
+                    q.offer(i);
+            }
+            while (!q.isEmpty()) {
+                int u = q.poll();
+                int v = edges[u];
+                in[v]--;
+                nums[v] += nums[u] + 1;
+                if (in[v] == 0)
+                    q.offer(v);
+            }
+
+            // 存储所有环的信息
+            PriorityQueue<Node> paths = new PriorityQueue<>();
+
+            for (int i = 0; i < n; i++) {
+                // 只遍历环内节点
+                if (in[i] == 0) continue;
+                // v 为连接节点数目
+                // max_no 为环内最大节点值
+                int cur = i, v = 0, max_no = i, min_no = Integer.MAX_VALUE;
+                // 存储环路径
+                Node node = new Node();
+                while (in[cur] > 0) {
+                    v += nums[cur];
+                    node.path.add(cur);
+                    in[cur] = 0;
+                    cur = edges[cur];
+                    max_no = Math.max(max_no, cur);
+                    min_no = Math.min(min_no, cur);
+                }
+                // H = L - V
+                node.H = node.path.size() - v;
+                node.maxNo = max_no;
+                // 添加环路径
+                paths.add(node);
+            }
+
+            List<Integer> path = paths.peek().path;
+            int start = paths.peek().minNo;
+            for (int i = 0; i < path.size(); i++) {
+                System.out.print(start);
+                start = edges[start];
+                if (i != path.size() - 1)
+                    System.out.print(" ");
+            }
+        }
+    }
+
+    public static void main(String[] args) {
+        Solution solution = new C().new Solution();
+        solution.solution();
+    }
+}
+
+/*
+4
+3 3 0 2
+ */
+```
+
+### 外卖项目
+
+订单整个流程：
+
+1. 前端点击提交订单，请求后端接口 /user/order/submit
+2. 后端生产订单信息(唯一 orderNO，OD/RF + 时间戳 + 10UUID)插入 orders 表，将购物车信息插入 orderDetail 表，并返回订单部分信息 orderNO, money
+3. 前端获得订单信息后跳转到支付页面，点击支付后请求后端接口 /user/order/payment, 参数为 orderNO, money
+4. 后端生成预支付订单信息 PrepayWithRequestPaymentResponse 返回
+
+```java
+WeChatPayUtil2.jsapi(
+        "永达无界订单", // 商品描述
+        ordersPaymentDTO.getOrderNumber(), // 商户订单号
+        ordersPaymentDTO.getAmount(), // 支付金额，单位 元
+        user.getOpenid() // 微信用户的openid
+```
+
+- 前端调用 uni.requestPayment 参数为 预支付订单信息
+- 支付成功后会回调接口 /notify/paySuccess，解密返回信息，支付成功会更新订单状态等操作，注意防止重复回调问题，并发使用 sychorized，分布式使用分布式锁
+- 回调中使用 websocket 进行订单通知
+- 使用 rabbitmq 延迟队列进行订单失效，会回调微信查询状态进行兜底
+
+### OJ系统
+
+判题流程：
+
+- 用户点击提交代码，使用 rabbitmq 异步调用给判题模块
+- 判题模块远程调用代码沙箱，入参为代码和输入用例和限制时间，内存
+- 代码沙箱流程：
+  - 保存代码到文件中
+  - process javac 编译代码
+  - 创建 docker jdk 容器用来运行代码，获取输出，返回结果
+  - 使用 StopWatch 获取超时时间，java stat 获取内存
+  - 整理输出结果，删除代码
+
+
+
+
+
+
+
+使用技术
+
+设计模式
+
+线程创建方式
+
+介绍项目
+
+**线程池使用场景**
+
+redis 使用场景，**配置参数**
+
+rabbitmq 使用场景，模式
+
+
+
+手撕：全排列，
+
+回顾机考
+
+读书
+
+遇到的问题
 

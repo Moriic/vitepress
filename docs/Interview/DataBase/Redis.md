@@ -907,7 +907,7 @@ replicaof <服务器 A 的 IP 地址> <服务器 A 的 Redis 端口号>
 
 执行了 replicaof 命令后，从服务器就会给主服务器发送 `psync` 命令，表示要进行数据同步。
 
-psync 命令包含两个参数，分别是**主服务器的 runID** 和**复制进度 offset**。
+psync 命令包含两个参数，分别是 **主服务器的 runID** 和 **复制进度 offset**。
 
 - runID，每个 Redis 服务器在启动时都会自动生产一个随机的 ID 来唯一标识自己。当从服务器和主服务器第一次同步时，因为不知道主服务器的 run ID，所以将其设置为 "?"。
 - offset，表示复制的进度，第一次同步时，其值为 -1。
@@ -916,7 +916,7 @@ psync 命令包含两个参数，分别是**主服务器的 runID** 和**复制�
 
 并且这个响应命令会带上两个参数：主服务器的 runID 和主服务器目前的复制进度 offset。从服务器收到响应后，会记录这两个值。
 
-FULLRESYNC 响应命令的意图是采用**全量复制**的方式，也就是主服务器会把所有的数据都同步给从服务器。
+FULLRESYNC 响应命令的意图是采用 **全量复制** 的方式，也就是主服务器会把所有的数据都同步给从服务器。
 
 #### 主服务器全量复制
 
@@ -959,7 +959,281 @@ FULLRESYNC 响应命令的意图是采用**全量复制**的方式，也就是�
 
 网络断开后，当从服务器重新连上主服务器时，从服务器会通过 psync 命令将自己的复制偏移量 slave_repl_offset 发送给主服务器，主服务器根据自己的  master_repl_offset 和 slave_repl_offset 之间的差距，然后来决定对从服务器执行哪种同步操作：
 
-- 如果判断出从服务器要读取的数据还在 repl_backlog_buffer 缓冲区里，那么主服务器将采用**增量同步**的方式；
-- 相反，如果判断出从服务器要读取的数据已经不存在 repl_backlog_buffer 缓冲区里，那么主服务器将采用**全量同步**的方式。
+- 如果判断出从服务器要读取的数据还在 repl_backlog_buffer 缓冲区里，那么主服务器将采用 **增量同步** 的方式；
+- 相反，如果判断出从服务器要读取的数据已经不存在 repl_backlog_buffer 缓冲区里，那么主服务器将采用 **全量同步** 的方式。
 
 当主服务器在 repl_backlog_buffer 中找到主从服务器差异（增量）的数据后，就会将增量的数据写入到 replication buffer 缓冲区，这个缓冲区我们前面也提到过，它是缓存将要传播给从服务器的命令。
+
+## 分布式锁
+
+### Redis setnx 实现
+
+![b4d2260f56b7412e94eefcee90127f98](https://raw.githubusercontent.com/Moriic/picture/main/image/1728826038_0.png)
+
+![5b1a352a0ee24844ae0cf4347a7b515e](https://raw.githubusercontent.com/Moriic/picture/main/image/1728827477_0.webp)
+
+### Redission
+
+1. 可重复，A 获取锁，调用 B，B 也需要获取锁，允许一个线程在已经获取锁的情况下再次获取
+2. 误删问题
+3. 主从一致性
+4. **可重试**：利用信号量和 PubSub 功能实现等待、唤醒，获取锁失败的重试机制
+5. **超时续约**：利用 watchDog，每隔一段时间（releaseTime / 3），重置超时时间
+
+获取锁实现：
+
+- ARGV [1]：有效期
+- ARGV [2]：标识当前线程，可重入
+
+```lua
+-- 判断锁是否存在
+if (redis.call('exists', KEYS[1]) == 0) then
+    -- 不存在，获取锁
+    redis.call('hincrby', KEYS[1], ARGV[2], 1);
+    -- 设置有效期
+    redis.call('pexpire', KEYS[1], ARGV[1]);
+    return nil;
+end;
+-- 锁已经存在，判断是否是自己？！
+if (redis.call('hexists', KEYS[1], ARGV[2]) == 1) then
+    -- 自增+1
+    redis.call('hincrby', KEYS[1], ARGV[2], 1);
+    -- 重置有效期
+    redis.call('pexpire', KEYS[1], ARGV[1]);
+    return nil;
+end;
+return redis.call('pttl', KEYS[1]);
+```
+
+释放锁实现：
+
+- ARGV [1]：发送消息，通知其他锁
+
+- ARGV [2]：有效期
+- ARGV [3]：表示当前线程
+
+```lua
+-- 判断当前锁是否还是被自己持有
+if (redis.call('hexists', KEYS[1], ARGV[3]) == 0) then
+    -- 不是就就直接返回
+    return nil;
+    end;
+-- 是自己，则重入次数 -1
+local counter = redis.call('hincrby', KEYS[1], ARGV[3], -1);
+-- 判断重入次数是否已经为0
+if (counter > 0) then
+    -- 大于0，说明不能释放，重置有效期即可
+    redis.call('pexpire', KEYS[1], ARGV[2]);
+    return 0;
+else
+    -- 等于0，说明可以直接删除
+    redis.call('del', KEYS[1]);
+    -- 发消息
+    redis.call('publish', KEYS[2], ARGV[1]);
+    return 1;
+    end;
+return nil;
+```
+
+锁重试实现：
+
+**tryLock()** ：实现了 **重试机制**！通过 **消息订阅** 和 **信号量机制**，避免了 **while(true)** 让其一直无效尝试，避免了 **CPU 空转问题**！ 
+
+```java
+@Override
+public boolean tryLock(long waitTime, long leaseTime, TimeUnit unit) throws InterruptedException {
+    // 转成毫秒，后面都是以毫秒为单位
+    long time = unit.toMillis(waitTime);
+    // 当前时间
+    long current = System.currentTimeMillis();
+    // 线程ID-线程标识
+    long threadId = Thread.currentThread().getId();
+
+    // 尝试获取锁 tryAcquire() !!!
+    Long ttl = tryAcquire(waitTime, leaseTime, unit, threadId);
+        
+    // 如果上面尝试获取锁返回的是null，表示成功；如果返回的是时间则表示失败。
+    if (ttl == null) {
+        return true;
+    }
+
+    // 剩余等待时间 = 最大等待时间 -（用现在时间 - 获取锁前的时间）
+    time -= System.currentTimeMillis() - current;
+
+    // 剩余等待时间 < 0 失败
+    if (time <= 0) {
+        acquireFailed(waitTime, unit, threadId);
+        return false;
+    }
+
+    // 再次获取当前时间
+    current = System.currentTimeMillis();
+    // 重试逻辑，但不是简单的直接重试！
+    // subscribe是订阅的意思
+    RFuture<RedissonLockEntry> subscribeFuture = subscribe(threadId);
+    // 如果在剩余等待时间内，收到了释放锁那边发过来的publish，则才会再次尝试获取锁
+    if (!subscribeFuture.await(time, TimeUnit.MILLISECONDS)) {
+        if (!subscribeFuture.cancel(false)) {
+            subscribeFuture.onComplete((res, e) -> {
+                if (e == null) {   
+                    // 取消订阅
+                    unsubscribe(subscribeFuture, threadId);
+                }
+            });
+        }
+        // 获取锁失败
+        acquireFailed(waitTime, unit, threadId);
+        return false;
+    }
+
+    try {
+        // 又重新计算了一下，上述的等待时间
+        time -= System.currentTimeMillis() - current;
+        if (time <= 0) {
+            acquireFailed(waitTime, unit, threadId);
+            return false;
+        }
+
+        // 重试！
+        while (true) {
+            long currentTime = System.currentTimeMillis();
+            ttl = tryAcquire(waitTime, leaseTime, unit, threadId);
+
+            // 成功
+            if (ttl == null) {
+                return true;
+            }
+            
+            // 又获取锁失败，再次计算上面的耗时
+            time -= System.currentTimeMillis() - currentTime;
+            if (time <= 0) {
+                acquireFailed(waitTime, unit, threadId);
+                return false;
+            }
+
+            currentTime = System.currentTimeMillis();
+            // 采用信号量的方式重试！
+            if (ttl >= 0 && ttl < time) {
+                subscribeFuture.getNow().getLatch().tryAcquire(ttl, TimeUnit.MILLISECONDS);
+            } else {
+                subscribeFuture.getNow().getLatch().tryAcquire(time, TimeUnit.MILLISECONDS);
+            }
+            
+            // 重新计算时间（充足就继续循环）
+            time -= System.currentTimeMillis() - currentTime;
+            if (time <= 0) {
+                acquireFailed(waitTime, unit, threadId);
+                return false;
+            }
+        }
+    } finally {
+        unsubscribe(subscribeFuture, threadId);
+    }
+}
+```
+
+### 锁续期
+
+- watch dog 在当前节点存活时每 10s 给分布式锁的 key 续期 30s；
+- watch dog 机制启动，且代码中没有释放锁操作时，watch dog 会不断的给锁续期；
+- 如果程序释放锁操作时因为异常没有被执行，那么锁无法被释放，所以释放锁操作一定要放到 finally {} 中；
+- 要使 watchLog 机制生效 ，lock 时 不要设置 过期时间
+- watchlog 的延时时间 可以由 lockWatchdogTimeout 指定默认延时时间，但是不要设置太小。如 100
+- watchdog 会每 lockWatchdogTimeout/3 时间，去延时。
+- watchdog 通过 类似 netty 的 Future 功能来实现异步延时
+- watchdog 最终还是通过 lua 脚本来进行延时
+
+```java
+private <T> RFuture<Long> tryAcquireAsync(long waitTime, long leaseTime, TimeUnit unit, long threadId) {
+    RFuture<Long> ttlRemainingFuture;
+    //如果指定了加锁时间，会直接去加锁
+    if (leaseTime != -1) {
+        ttlRemainingFuture = tryLockInnerAsync(waitTime, leaseTime, unit, threadId, RedisCommands.EVAL_LONG);
+    } else {
+        //没有指定加锁时间 会先进行加锁，并且默认时间就是 LockWatchdogTimeout的时间
+        //这个是异步操作 返回RFuture 类似netty中的future
+        ttlRemainingFuture = tryLockInnerAsync(waitTime, internalLockLeaseTime,
+                TimeUnit.MILLISECONDS, threadId, RedisCommands.EVAL_LONG);
+    }
+
+    //这里也是类似netty Future 的addListener，在future内容执行完成后执行
+    ttlRemainingFuture.onComplete((ttlRemaining, e) -> {
+        if (e != null) {
+            return;
+        }
+
+        // lock acquired
+        if (ttlRemaining == null) {
+            // leaseTime不为-1时，不会自动延期
+            if (leaseTime != -1) {
+                internalLockLeaseTime = unit.toMillis(leaseTime);
+            } else {
+                //这里是定时执行 当前锁自动延期的动作,leaseTime为-1时，才会自动延期
+                scheduleExpirationRenewal(threadId);
+            }
+        }
+    });
+    return ttlRemainingFuture;
+}
+```
+
+scheduleExpirationRenewal 中会调用 renewExpiration。 这里我们可以看到是, 启用了一个 timeout 定时，去执行延期动作
+
+```java
+private void renewExpiration() {
+    ExpirationEntry ee = EXPIRATION_RENEWAL_MAP.get(getEntryName());
+    if (ee == null) {
+        return;
+    }
+
+    Timeout task = commandExecutor.getConnectionManager().newTimeout(new TimerTask() {
+        @Override
+        public void run(Timeout timeout) throws Exception {
+            ExpirationEntry ent = EXPIRATION_RENEWAL_MAP.get(getEntryName());
+            if (ent == null) {
+                return;
+            }
+            Long threadId = ent.getFirstThreadId();
+            if (threadId == null) {
+                return;
+            }
+
+            RFuture<Boolean> future = renewExpirationAsync(threadId);
+            future.onComplete((res, e) -> {
+                if (e != null) {
+                    log.error("Can't update lock " + getRawName() + " expiration", e);
+                    EXPIRATION_RENEWAL_MAP.remove(getEntryName());
+                    return;
+                }
+
+                if (res) {
+                    //如果 没有报错，就再次定时延期
+                    // reschedule itself
+                    renewExpiration();
+                } else {
+                    cancelExpirationRenewal(null);
+                }
+            });
+        }
+        // 这里我们可以看到定时任务 是 lockWatchdogTimeout 的1/3时间去执行 renewExpirationAsync
+    }, internalLockLeaseTime / 3, TimeUnit.MILLISECONDS);
+
+    ee.setTimeout(task);
+}
+```
+
+最终 scheduleExpirationRenewal 会调用到 renewExpirationAsync，执行下面这段 lua 脚本。他主要判断就是 这个锁是否在 redis 中存在，如果存在就进行 pexpire 延期。
+
+```java
+protected RFuture<Boolean> renewExpirationAsync(long threadId) {
+    return evalWriteAsync(getRawName(), LongCodec.INSTANCE, RedisCommands.EVAL_BOOLEAN,
+            "if (redis.call('hexists', KEYS[1], ARGV[2]) == 1) then " +
+                    "redis.call('pexpire', KEYS[1], ARGV[1]); " +
+                    "return 1; " +
+                    "end; " +
+                    "return 0;",
+            Collections.singletonList(getRawName()),
+            internalLockLeaseTime, getLockName(threadId));
+}
+```
+
