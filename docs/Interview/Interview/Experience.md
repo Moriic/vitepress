@@ -342,3 +342,115 @@ rabbitmq 使用场景，模式
 
 遇到的问题
 
+redis 配置参数：
+
+**bind：**配置可连接的ip地址，0.0.0.0代表任何地址都可以访问redis
+
+**port：**连接端口
+
+**protected-mode：**安全模式，3.2以后版本才有，需要公网访问的情况下才设置为no
+
+**tcp-backlog：**此参数确定了TCP连接中已完成队列（完成三次握手之后）的长度，当然此值必须不大于Linux系统定义的/proc/sys/net/core/somaxconn值，默认是511，而Linux的默认参数值是128。当系统并发量大并且客户端速度缓慢的时候，可以将这二个参数一起参考设定
+
+**timeout：**客户端超时时间，超过该时间就会断开连接，0代表不启用该功能
+
+**tcp-keepalive：**每n秒进行一次心跳检测，0代表不启用该功能
+
+**pidfile：**pid文件，一个redis实例就会生成一个pid文件
+
+**logfile：**日志文件位置
+
+**databases：**设置redis中数据库的数量
+
+**save：**如果redis持久化方式为rdb，则需要配置，举个例子save 300 1，代表300秒内至少有一个key发生变化的情况下，才会报错rdb文件
+
+**stop-writes-on-bgsave-error：**rdb持久化过程中发生错误时redis是否正常工作
+
+**rdbcompression：**是否开启rdb文件压缩，可以节省磁盘空间，redis会采用LZF算法，需要消耗cpu资源
+
+**rdbchecksum：**是否校验rdb文件(默认值yese)。在存储快照后，我们还可以让redis使用CRC64算法来进行数据校验，但是这样做会增加大约10%的性能消耗，如果希望获取到最大的性能提升，可以关闭此功能。
+
+**dbfilename：**rdb文件名
+
+**dir：**数据文件存放目录
+
+**slave-serve-stale-data：**默认值为yes。当一个slave和master失去联系，或者复制正在进行时，slave可能会有两种表现：1. yes，slave仍然会应答客户端请求，但返回的数据可能是过时，或者数据可能是空的在第一次同步的时，2. no，在你执行除了info he slaveof之外的其他命令时，slave都将返回一个"SYNC with master in progress"的错误。
+
+**slave-read-only：**从节点是否只接收并处理读请求
+
+**repl-diskless-sync：**主从数据复制是否使用无硬盘复制功能。硬盘备份：redis主站创建一个新的进程，用于把rdb文件写在硬盘上。过一会儿，其父进程递增地将文件传送给从节点。无硬盘备份：redis主站创建一个新的进程，子进程直接把rdb文件推送给从节点，不需要用到硬盘。
+
+**repl-diskless-sync-delay：**当启用无硬盘备份时，服务器会等待一段时间后才开始推送rdb文件
+
+**repl-disable-tcp-nodelay：**同步之后是否禁用从站上的TCP_NODELAY 如果你选择yes，redis会使用较少量的TCP包和带宽向从站发送数据。但这会导致在从站增加一点数据的延时。 Linux内核默认配置情况下最多40毫秒的延时。如果选择no，从站的数据延时不会那么多，但备份需要的带宽相对较多。默认情况下我们将潜在因素优化，但在高负载情况下或者在主从站都跳的情况下，把它切换为yes是个好主意。默认值为no
+
+**slave-priority：**子节点晋升成主节点的优先级
+
+**maxmemory：**设置redis可以使用的内存量。一旦到达内存使用上限，redis将试图移除内部数据，移除规则可以通过maxmemory-policy来指定
+
+**maxmemory-policy：**redis提供了6中移除规则：volatile-lru：使用LRU算法移除过期集合中的key。allkeys-lru：使用LRU算法移除key。allkeys-lru：使用LRU算法移除key。allkeys-random：移除随机的key。volatile-ttl：移除那些TTL值最小的key，即那些最近才过期的key。noeviction：不进行移除。针对写操作，只是返回错误信息。
+
+**appendonly：**开启aof持久化模式
+
+**appendfsync：**持久化策略，no：表示不执行fsync，由操作系统保证数据同步到磁盘，速度最快。always：表示每次写入都执行fsync，以保证数据同步到磁盘。always：表示每次写入都执行fsync，以保证数据同步到磁盘。
+
+**no-appendfsync-on-rewrite：**是否重写aof文件，用于减小aof文件大小
+
+**auto-aof-rewrite-percentage：**当aof文件超过上次大小的百分比，会重写文件
+
+**auto-aof-rewrite-min-size：**设置重写的最小的文件大小，防止文件较小但是又执行了重写操作
+
+**aof-load-truncated：**aof文件可能在尾部是不完整的，当redis启动的时候，aof文件的数据被载入内存。重启可能发生在redis所在的主机操作系统宕机后，尤其在ext4文件系统没有加上data=ordered选项，出现这种现象 redis宕机或者异常终止不会造成尾部不完整现象，可以选择让redis退出，或者导入尽可能多的数据。如果选择的是yes，当截断的aof文件被导入的时候，会自动发布一个log给客户端然后load。如果是no，用户必须手动redis-check-aof修复AOF文件才可以。默认值为 yes。
+
+**lua-time-limit：**lua脚本最大运行时间
+
+**cluster-enabled：**是否启用集群
+
+**cluster-config-file：**集群配置文件，由redis自动生成
+
+**cluster-node-timeout：**节点互连的超时时间
+
+**cluster-slave-validity-factor：**可以配置值为10。在进行故障转移的时候，全部slave都会请求申请为master，但是有些slave可能与master断开连接一段时间了， 导致数据过于陈旧，这样的slave不应该被提升为master。该参数就是用来判断slave节点与master断线的时间是否过长。判断方法是：比较slave断开连接的时间和(node-timeout * slave-validity-factor) + repl-ping-slave-period 如果节点超时时间为三十秒, 并且slave-validity-factor为10,假设默认的repl-ping-slave-period是10秒，即如果超过310秒slave将不会尝试进行故障转移
+
+**cluster-require-full-coverage：**当节点故障时，如果由hash槽没有被分配，配置为yes时，不会对外提供服务，配置为no时仍然能提供服务
+
+**slowlog-log-slower-than：**当redis命令执行时间超过此时间会被记录到slowlog中，单位为微秒
+
+**slowlog-max-len：**慢日志最大长度
+
+**latency-monitor-threshold：**延迟监控，0为关闭
+
+**hash-max-ziplist-entries：**hash类型的数据结构在编码上可以使用ziplist和hashtable。hash类型的数据结构在编码上可以使用ziplist和hashtable。因此redis对hash类型默认采取ziplist。如果hash中条目的条目个数或者value长度达到阀值,将会被重构为hashtable。因此redis对hash类型默认采取ziplist。如果hash中条目的条目个数或者value长度达到阀值，将会被重构为hashtable。这个参数指的是ziplist中允许存储的最大条目个数，默认为512，建议为128
+
+**hash-max-ziplist-value：**ziplist中允许条目value值最大字节数，默认为64，建议为1024
+
+**list-max-ziplist-siz：**当取正值的时候，表示按照数据项个数来限定每个quicklist节点上的ziplist长度。比如，当这个参数配置成5的时候，表示每个quicklist节点的ziplist最多包含5个数据项。当取负值的时候，表示按照占用字节数来限定每个quicklist节点上的ziplist长度。这时，它只能取-1到-5这五个值，每个值含义如下：-5: 每个quicklist节点上的ziplist大小不能超过64 Kb。（注：1kb => 1024 bytes）。-4: 每个quicklist节点上的ziplist大小不能超过32 Kb。-3: 每个quicklist节点上的ziplist大小不能超过16 Kb。-2: 每个quicklist节点上的ziplist大小不能超过8 Kb。（-2是Redis给出的默认值）-1: 每个quicklist节点上的ziplist大小不能超过4 Kb。
+
+**activerehashing：**是否需要再hash，配置为yes的情况下，redis会每100ms花费1ms对hash的数据结构做再hash，可以降低内存使用量
+
+**aof-rewrite-incremental-fsync：**aof重写时，每32MB进行一次fsync，避免写入磁盘时较大延迟
+
+**requirepass：**设置密码
+
+
+线程池使用场景：处理网络请求任务，redis？
+
+rabbitmq 模式：
+简单模式
+一个生产者，一个消费者，一个队列，采用默认交换机。可以理解为生产者P发送消息到队列Q，一个消费者C接收。
+
+工作模式
+一个生产者，多个消费者，一个队列，采用默认交换机。可以理解为生产者P发送消息到队列Q，可以由多个消费者C1、C2进行接收。
+
+发布/订阅模式（fanout）
+功能：一个生产者、一个 fanout 类型的交换机、多个队列、多个消费者。一个生产者发送的消息会被多个消费者获取。其中 fanout 类型就是发布订阅模式，只有订阅该生产者的消费者会收到消息。
+
+
+路由模式（direct）
+功能：一个生产者，一个 direct 类型的交换机，多个队列，交换机与队列之间通过 routing-key 进行关联绑定，多个消费者。生产者发送消息到交换机并且要指定routing-key，然后消息根据这交换机与队列之间的 routing-key 绑定规则进行路由被指定消费者消费。
+
+主题模式（topic)
+说明：一个生产者，一个 topic 类型的交换机，多个队列，交换机与队列之间通过 routing-key 进行关联绑定，多个消费者。生产者发送消息到交换机并且要指定 routing-key，然后消息根据这交换机与队列之间的 routing-key 绑定规则进行路由被指定消费者消费。与路由模式不同是 routing-key 有指定的队则，可以更加的通用，满足更过的场景。routing-key 的规则如下：
+
+#：匹配一个或者多个词，例如lazy.# 可以匹配 lazy.xxx 或者 lazy.xxx.xxx
+*：只能匹配一个词，例如lazy.* 只能匹配 lazy.xxx
